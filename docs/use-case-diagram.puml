@@ -1,0 +1,22 @@
+@startuml use-case-diagram
+left to right direction
+
+actor Customer
+
+rectangle "Expense Tracker (project name TBD)" {
+  usecase "UC-01: Ingest Expense from\nBank Receipt (Share-to-App)" as UC01
+  usecase "UC-02: Track Income and\nExpenses Manually" as UC02
+  usecase "UC-03: Review Income/Expense\nDashboard" as UC03
+  usecase "Manage Bank Expense Hook" as UCHook
+  usecase "Manage Category" as UCCat
+}
+
+Customer --> UC01
+Customer --> UC02
+Customer --> UC03
+Customer --> UCHook
+
+UC01 ..> UCCat : <<include>>
+UC02 ..> UCCat : <<include>>
+
+@enduml
