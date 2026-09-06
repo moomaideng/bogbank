@@ -2,17 +2,7 @@
 
 ## Project Name
 
-TBD — see suggestions below, not finalized by the team yet.
-
-**Suggestions** (pick one, tweak, or override — pun continues the group name's joke; team's call):
-- **PiggyLog** — plain English, "piggy bank" ties directly to the group's pig joke, reads fine on a resume/portfolio.
-- **กระปุกหมู** (Piggy Jar) — Thai, cute, on-theme, easy to say among the target college-student audience.
-- **MoneyMoo** — bilingual pun (หมู → "Moo" sound + Money), keeps the meme-humor branding style of "หมูไม่เด้ง".
-- **ExpenseWise** — neutral/professional fallback if you'd rather not tie the product name to the group's inside joke for a graded submission.
-
-## Group Name
-
-หมูไม่เด้ง
+TBD, not finalized by the team yet.
 
 ## Group Members 
 
@@ -115,5 +105,3 @@ User can view bar chart for comparing time intervals. The available filters are
 
 ### Performance
 - NFR8: The system shall respond to dashboard chart requests within an acceptable time for typical (up to 1-year) date ranges.
-- TODO: add latency or throughput? or not?
-

@@ -2,11 +2,12 @@
 
 ## Context
 
-Core domain data is relational: income/expense records reference a category and, optionally, a bank hook, with clear foreign-key relationships. Dashboard queries (UC-03) are aggregate-style — group and sum by category, time range, and bank provider. Nothing in the current scope is genuinely document-shaped/schema-less, and query volume is nowhere near OLAP scale.
+Core domain data is relational. Income and expense records point to a category. They can also point to a bank hook. Those are clear foreign-key relationships. Dashboard queries group and sum by category, time range, and bank provider. Current data is not a document shape that needs a schema-less store. Query volume is not at OLAP scale.
 
-Each microservice still owns its own schema/database instance (ADR-01) — this ADR is about which single database *technology* the team standardizes on for v1, not about sharing one database across services. The course explicitly allows a single database technology in the first architecture iteration.
-
-Options considered: PostgreSQL, MongoDB, ClickHouse.
+Options considered:
+- **PostgreSQL**: a relational SQL database with foreign keys and group-by queries that fits income, expense, and category data.
+- **MongoDB**: a document store that is easy to change later, but it is weak for the joins and dashboard sums we need.
+- **ClickHouse**: a column store built for large analytics that is faster for huge dashboards and more than we need for a student expense tracker.
 
 ## Decision
 
@@ -19,11 +20,11 @@ Accepted
 ## Consequences
 
 **Positive**
-- Mature relational/foreign-key support fits the domain model directly.
+- Mature relational and foreign-key support fits the domain model directly.
 - Strong SQL aggregate support for dashboard group-by queries.
-- One technology for the whole team to operate and learn.
-- Wide, mature Go driver support (e.g. pgx), pairing well with the backend language choice.
+- One technology for the whole team to run and learn.
+- Wide and mature driver support.
 
 **Negative**
-- Gives up MongoDB's schema flexibility (not needed here) and ClickHouse's OLAP performance (not needed at this scale).
-- If dashboard query volume grows significantly later, a read-optimized store may be needed — deferred, not a v1 concern.
+- We give up MongoDB's schema flexibility. We do not need that here. We also give up ClickHouse's OLAP performance. We do not need that at this scale.
+- If dashboard query volume grows a lot later, we may need a read-optimized store. That is not a v1 concern.

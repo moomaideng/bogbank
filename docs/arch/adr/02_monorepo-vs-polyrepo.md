@@ -2,15 +2,15 @@
 
 ## Context
 
-The project spans a frontend, multiple backend services (per ADR-01), infra config, and architecture documentation (ADRs, microservice design, DDD docs) that frequently need to change together — e.g. adding a field can touch a service's API, its docs, and the frontend that consumes it in the same change.
+The project has a frontend, several backend services (per ADR-01), infra config, and architecture docs (ADRs, microservice design, usecase diagram). These often need to change together. For example, adding a field can touch a service API, its docs, and the frontend in the same change.
 
-The team is 5 people working on one semester-long project. The coordination overhead of separate repos (independent versioning, cross-repo PRs, release orchestration) outweighs the isolation benefits a polyrepo would give a larger or longer-lived organization.
-
-Project conventions already assume a single-repo layout: `docs/arch/adr/`, `docs/arch/microservices-design/`, and `docs/ddd/` living alongside the frontend, backend, and infra code.
+Options considered:
+- **Monorepo**: all services, the frontend, infra, and docs live in one repo, so one PR can change them together, though CI may later need path-based filtering.
+- **Polyrepo**: one repo per service for stronger isolation. That pays off for bigger or longer-running organizations, but extra versioning, cross-repo PRs, and coordinated releases outweigh that benefit for a 5-person semester project.
 
 ## Decision
 
-Use a single monorepo for all services, the frontend, infra config, and architecture/DDD documentation.
+Use one monorepo for all services, the frontend, infra config, and architecture/DDD docs.
 
 ## Status
 
@@ -19,10 +19,10 @@ Accepted
 ## Consequences
 
 **Positive**
-- Atomic commits/PRs across service, frontend, and doc changes.
-- One CI/CD pipeline and one place to browse the whole system; easy for a small team to stay in sync.
-- Architecture docs stay versioned next to the code that motivated them.
+- One commit or PR can change a service, the frontend, and the docs together.
+- One CI/CD pipeline and one place to browse the whole system. That is easy for a small team to stay in sync.
+- Architecture docs stay versioned next to the code.
 
 **Negative**
-- The repo will grow large across all services; CI will eventually need path-based filtering to avoid rebuilding/testing everything on every change.
-- No repo-boundary enforcement of service isolation — the team must rely on code review and CI checks (e.g. import-boundary linting) instead, once services exist.
+- The repo will grow large across all services. CI will later need path-based filtering so we do not rebuild and test everything on every change.
+- The repo boundary does not enforce service isolation. The team must rely on code review and CI checks instead, once services exist.

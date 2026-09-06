@@ -16,7 +16,7 @@ Per the convention notes for this round: no dedicated Auth/User service (auth ha
 | `SuggestCategory(merchantHint, customerId)` | Proposes a category for the extracted transaction, using the customer's existing categories. |
 | `SubmitExpenseCandidate(customerId, extractedData, confirmedCategoryId)` | Hands off the confirmed candidate to the Ledger Service to create the final expense record. |
 
-**Collaborators**: Object Storage (store/fetch the receipt image, ADR-06) · Ledger Service (fetch the customer's categories for suggestion; create the final expense record once confirmed).
+**Collaborators**: Object Storage (store/fetch the receipt image, ADR-07) · Ledger Service (fetch the customer's categories for suggestion; create the final expense record once confirmed).
 
 **Data ownership**: None. Stateless processing pipeline — persistence of the final record is delegated to the Ledger Service.
 

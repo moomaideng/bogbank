@@ -6,7 +6,7 @@ Arrows show request/invocation flow: `A --> B` means **A calls B** (per the cour
 flowchart LR
     Customer(["Customer\n(college student)"])
     GoogleOAuth[["Google OAuth\n(external identity provider)"]]
-    ObjectStorage[["Object Storage\nRustFS (dev) / S3-compatible (prod)\n— ADR-06"]]
+    ObjectStorage[["Object Storage\nRustFS (dev) / S3-compatible (prod)\n— ADR-07"]]
 
     subgraph System["Expense Tracker (project name TBD)"]
         Ingestion["Receipt Ingestion Service\n(no DB — stateless)"]

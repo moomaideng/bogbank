@@ -2,17 +2,21 @@
 
 ## Context
 
-This is a Software Architecture course term project. The syllabus and graded deliverables (Service–Operations–Collaborators table, per-service design and APIs, DDD-based decomposition per the `02_02_Decomposition_Strategies` and `04_02_DDD_2026` course material) require the team to practice designing and building a microservices system, not just a monolith.
+This is a Software Architecture course term project. The syllabus and graded deliverables require the team to design and build a microservices system. Those deliverables include the Service–Operations–Collaborators table, per-service design and APIs, and DDD-based decomposition.
 
-The actual product (a personal expense tracker for college students, project name TBD, built by group หมูไม่เด้ง) is functionally small and cohesive at v1 scope: auth, bank-hook receipt ingestion, income/expense/category CRUD, and a dashboard. On business merits alone, a monolith would be simpler to build and operate for a 5-person team shipping in one semester.
+The product is a personal expense tracker for college students. v1 is small: auth, bank-hook receipt ingestion, income/expense/category CRUD, and a dashboard. If we only looked at the product, a monolith would be simpler to build and run for a 5-person team in one semester.
 
-Team size is 5, which is small for maintaining multiple independently deployable services (build, deploy, and observability overhead scale with service count).
+The team has 5 people, which is small for many independently deployable services. Build, deploy, and observability work grow with each extra service.
+
+Options considered:
+- **Monolith**: one app to build, run, and deploy that is simpler for a 5-person semester project, but it does not meet the course's service-decomposition deliverable.
+- **Microservices**: one service per DDD subdomain, each with its own data, which meets the course requirements but adds extra deploy and communication work.
 
 ## Decision
 
-Adopt a microservices architecture, decomposing the system by business capability using DDD-derived bounded contexts (see `docs/arch/microservices-design/` and `docs/ddd/` once written), primarily to satisfy the course's architectural practice requirements.
+Adopt a microservices architecture. Split the system by DDD subdomain. The main reason is the course's architecture practice requirements.
 
-Mitigate the team-size/overhead mismatch by keeping the decomposition coarse-grained (avoid over-fragmenting services beyond what business capability boundaries justify) and by pairing this decision with a monorepo (ADR-02) and a simple v1 technology stack — single REST style, single database technology, no message broker — as the course's own guidance explicitly allows for a first architecture iteration.
+Keep the split coarse-grained. Do not create more services than needed. Pair this with a monorepo (ADR-02) and a simple v1 stack: one REST style, one database technology, and no message broker. The course allows this for a first architecture iteration.
 
 ## Status
 
@@ -21,10 +25,10 @@ Accepted
 ## Consequences
 
 **Positive**
-- Satisfies the graded deliverable requiring service decomposition, service APIs, and collaboration diagrams.
-- Forces explicit ownership of business capabilities and data per service, which is good practice regardless of product scale.
+- Meets the graded deliverable for service decomposition, service APIs, and collaboration diagrams.
+- Makes each service own its business capability and its data. That is good practice at any product size.
 
 **Negative**
-- Added operational complexity (inter-service calls, per-service deploys, distributed data ownership) that is disproportionate to the actual v1 business scale.
-- Slower local development loop than a single monolith app.
-- Some of this complexity is deliberately deferred (reverse proxy, dev/prod environment, internal IPC style, message broker, observability stack) until service boundaries are finalized in the Microservice Design step.
+- Extra operational work: inter-service calls, per-service deploys, and data owned by different services. This is more than v1 of the product needs.
+- Local development is slower than a single monolith app.
+- Some of this complexity waits until service boundaries are set in the Microservice Design step. That includes reverse proxy, dev/prod environment, internal IPC style, message broker, and observability stack.
