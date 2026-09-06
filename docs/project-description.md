@@ -14,7 +14,9 @@ BogBank
 
 ## Problem Description
 
-Expenses are difficult to track. Categorizing all daily expenses is tedious, and expenses are done on many different channels.
+Students want to track and understand their spending, but usually not enough to log it by hand.  Money moves through several bank apps — KBank, SCB, and others — and each one shows only its own transactions, so there's no single view of where the money actually went. Spreadsheets and generic finance apps can produce that view, but only if every transaction gets typed in by hand, and that upkeep is what people drop. What does exist is a phone full of receipt screenshots, scattered and unused. 
+
+The app watches for receipt images. The user picks which banks they use and gives the app permission to see their photos. From then on, it spots new receipt images on its own, reads off the amount, merchant, and date, and sends a notification with a suggested category — one tap and the expense is saved. Manual entry is always there for cash, missed receipts, or bad extractions. The dashboard shows spending by category for any period, and income against expense over a week, month, 3 months, or year, both filterable by bank. Categories are user-managed, sign-in is Google-only, and receipt and financial data are encrypted and handled under PDPA. 
 
 ## Target Customers
 
