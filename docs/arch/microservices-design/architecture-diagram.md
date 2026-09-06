@@ -16,7 +16,7 @@ flowchart LR
     end
 
     Customer -- "sign in" --> GoogleOAuth
-    Customer -- "share receipt (UC-01)" --> Ingestion
+    Customer -- "ingest receipt via gallery watch (UC-01)" --> Ingestion
     Customer -- "manage income/expense/\ncategory/bank hook (UC-02)" --> Ledger
     Customer -- "view dashboard (UC-03)" --> Dashboard
 

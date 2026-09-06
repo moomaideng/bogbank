@@ -2,7 +2,7 @@
 
 ## Context
 
-Receipt screenshots shared by users (UC-01) need to be stored as objects. The backend stores them and links them from expense records. This choice only affects local dev. Trying RustFS is low risk. Switching to another S3-compatible server later is a Docker Compose change, not an application code change. The app only talks to the S3 API.
+Receipt images detected from the device gallery (UC-01) need to be stored as objects. The backend stores them and links them from expense records. This choice only affects local dev. Trying RustFS is low risk. Switching to another S3-compatible server later is a Docker Compose change, not an application code change. The app only talks to the S3 API.
 
 Local dev options compared:
 - **MinIO**: was the most mature S3-compatible server, with a large community and docs, but [minio/minio](https://github.com/minio/minio) is archived and no longer actively maintained (read-only since April 2026).

@@ -7,11 +7,11 @@ Per the convention notes for this round: no dedicated Auth/User service (auth ha
 ## Services
 
 ### Receipt Ingestion Service
-**Business capability**: Turn a customer-shared receipt screenshot into a structured expense candidate with a suggested category. Owns UC-01.
+**Business capability**: Turn a newly detected bank receipt image into a structured expense candidate with a suggested category. Owns UC-01.
 
 | Operation | Description |
 |---|---|
-| `UploadReceipt(image)` | Accepts a receipt screenshot shared by the customer, stores it in object storage. |
+| `UploadReceipt(image)` | Accepts a receipt image uploaded by the mobile client after gallery-watch detection, stores it in object storage. |
 | `ExtractMetadata(imageRef)` | Extracts amount, merchant/counterparty, and date from the stored image. |
 | `SuggestCategory(merchantHint, customerId)` | Proposes a category for the extracted transaction, using the customer's existing categories. |
 | `SubmitExpenseCandidate(customerId, extractedData, confirmedCategoryId)` | Hands off the confirmed candidate to the Ledger Service to create the final expense record. |

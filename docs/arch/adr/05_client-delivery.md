@@ -2,16 +2,16 @@
 
 ## Context
 
-Target users are college students who mostly use phones (NFR5). The product needs dashboard charts, forms, and receipt intake (FR5). FR5 asks for sharing a receipt screenshot via the OS share sheet. A 5-person team has one semester, and the course grades architecture (services, APIs) more than shipping a native app.
+Target users are college students who mostly use phones (NFR5). The product needs dashboard charts, forms, and receipt intake (FR5). FR5 requires watching the device media gallery for new bank receipt images after the user grants permission at hook setup. A PWA or mobile browser cannot access the photo library in the background, so receipt auto-ingest needs a native mobile client.
 
 Options considered:
-- **Responsive website**: works in the mobile browser with no install step, but weak OS share-sheet integration (usually file upload instead).
-- **Mobile-first web + PWA**: installable from the browser, can register as a share target on Android; iOS share-to-PWA support is still limited.
-- **Native mobile app** (React Native, Flutter, or platform-native): best share sheet and notifications on iOS and Android, but the most work for a semester focused on microservices.
+- **Responsive website**: works in the mobile browser with no install step, but cannot watch the media gallery or run background receipt detection.
+- **Mobile-first web + PWA**: installable from the browser, but still blocked from gallery access on mobile, only manual file pick or Web Share Target (explicit user action each time).
+- **Native mobile app** (React Native, Flutter, or platform-native): can request media-library permission and watch for new receipt images (e.g. bank app folders or the Screenshots album). Required for the gallery-watch intake model.
 
 ## Decision
 
-Deliver v1 as a mobile-first responsive web app, PWA-capable where it helps (web app manifest, add-to-home-screen). Receipt intake uses in-app upload in v1. Add Android Web Share Target API if time allows. Defer a native app to a later iteration. Keep backend REST APIs stable so a future native client can reuse them.
+Deliver v1 as a **native mobile app**. Receipt intake uses **media-gallery watch**: when the customer configures a bank hook, the app requests media-library permission and monitors for newly added receipt images tied to that provider. Detected images upload to the backend for extraction and category suggestion. Keep backend REST APIs stable so other clients could be added later.
 
 ## Status
 
@@ -20,11 +20,10 @@ Accepted
 ## Consequences
 
 **Positive**
-- Matches NFR5 mobile-first without App Store deployment overhead.
-- One codebase for mobile and desktop browsers.
-- PWA install and optional Android share target improve phone UX without a native stack.
+- Matches FR5 gallery-watch intake and NFR5 mobile-first on real devices.
+- Native push notifications for expense confirmation (FR7) work better than on a PWA.
 
 **Negative**
-- FR5 is only fully met on all platforms with in-app upload in v1. Perfect share-sheet UX on iOS may wait for native or better PWA support.
-- Push notifications for expense confirmation (FR7) are limited on iOS PWAs compared with native.
-- If the product later requires native-only UX, the UI layer will be rebuilt. Backend APIs should stay stable.
+- More client work than web-only: store releases, native permissions, and iOS/Android testing.
+- Bank behavior varies. Some apps block screenshots (`FLAG_SECURE`). Others save receipts to their own album. Manual entry (UC-02) stays the fallback (NFR7).
+- iOS background limits. Reliable detection may require the app in the foreground; 24/7 background polling is not guaranteed.

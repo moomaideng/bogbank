@@ -1,24 +1,23 @@
 # Business Use Cases
 
-Per course convention, Sign In / Sign Out are infrastructure, not counted as Business Use Cases (see `supplimentary-materials/convention-for-work.md`). These are the 3 primary Business Use Cases for the project (name TBD, built by group หมูไม่เด้ง).
+Per course convention, Sign In and Sign Out are not counted as Business Use Cases. These are the 3 primary Business Use Cases for the project.
 
-Supporting use cases (`Manage Bank Expense Hook`, `Manage Category`) are CRUD utilities that the primary use cases depend on — they show up as `<<include>>` in the use case diagram, not as one of the 3.
-
-## UC-01: Ingest Expense from Bank Receipt (Share-to-App)
+## UC-01: Ingest Expense from Bank Receipt (Gallery Watch)
 
 **Primary Actor**: Customer (college student)
 
-**Goal**: Record an expense with minimal manual typing by sharing a bank payment/transfer confirmation screenshot instead of entering the transaction by hand.
+**Goal**: Record an expense with minimal manual typing by automatically picking up new bank receipt images from the device gallery instead of entering each transaction by hand.
 
-**Preconditions**: Customer is signed in; customer has at least one bank expense hook configured (see `Manage Bank Expense Hook`).
+**Preconditions**: Customer is signed in; customer has at least one bank expense hook configured and has granted media-library access for that hook (see `Manage Bank Expense Hook`).
 
 **Main Flow**:
-1. Customer receives or takes a screenshot of a bank payment confirmation on their phone.
-2. Customer shares the screenshot to the app via the OS share sheet, selecting the relevant bank hook.
-3. System extracts metadata (amount, merchant/counterparty, date) from the image.
-4. System creates a pending expense record and notifies the customer with a suggested category.
-5. Customer confirms the suggested category or picks a different one (`<<include>> Manage Category`).
-6. System finalizes the expense record under the confirmed category.
+1. Customer completes a bank payment; the bank app saves a receipt image to the device gallery (where the OS and bank app allow).
+2. System detects a newly added receipt image associated with the configured bank hook (media-library listener or polling via the native mobile app).
+3. System uploads the image to object storage.
+4. System extracts metadata (amount, merchant/counterparty, date) from the stored image.
+5. System creates a pending expense record and notifies the customer with a suggested category.
+6. Customer confirms the suggested category or picks a different one (`<<include>> Manage Category`).
+7. System finalizes the expense record under the confirmed category.
 
 **Postcondition**: A categorized expense record exists and is reflected in the dashboard.
 
@@ -26,9 +25,9 @@ Supporting use cases (`Manage Bank Expense Hook`, `Manage Category`) are CRUD ut
 
 ## UC-02: Track Income and Expenses Manually
 
-**Primary Actor**: Customer
+**Primary Actor**: Customer (college student)
 
-**Goal**: Record or correct income/expense transactions that aren't covered by a bank-hook receipt share — cash transactions, other banks, a missed share, or fixing a mistake.
+**Goal**: Record or correct income/expense transactions that aren't covered by gallery-watch receipt intake — cash transactions, other banks, blocked screenshots, a missed detection, or fixing a mistake.
 
 **Preconditions**: Customer is signed in.
 
@@ -40,11 +39,11 @@ Supporting use cases (`Manage Bank Expense Hook`, `Manage Category`) are CRUD ut
 
 **Postcondition**: The customer's income/expense record set is complete and accurate.
 
-**Outcome the customer wants**: Nothing falls through the cracks even when the automatic receipt-share flow doesn't apply.
+**Outcome the customer wants**: Nothing falls through the cracks even when the automatic gallery-watch flow doesn't apply.
 
 ## UC-03: Review Income/Expense Dashboard
 
-**Primary Actor**: Customer
+**Primary Actor**: Customer (college student)
 
 **Goal**: Understand spending and income patterns over time and by bank provider, to make better financial decisions — this is the core problem the product solves (expenses are tedious to track and categorize across many channels).
 
@@ -61,5 +60,5 @@ Supporting use cases (`Manage Bank Expense Hook`, `Manage Category`) are CRUD ut
 
 ## Supporting Use Cases (not counted among the 3)
 
-- **Manage Bank Expense Hook** — Customer: add/edit/remove a bank provider hook. Prerequisite for UC-01.
+- **Manage Bank Expense Hook** — Customer: add/edit/remove a bank provider hook and grant media-library permission for receipt detection. Prerequisite for UC-01.
 - **Manage Category** — Customer: add/edit/remove categories used to classify income/expense records. Included by UC-01 and UC-02.
