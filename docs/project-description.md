@@ -2,7 +2,7 @@
 
 ## Project Name
 
-TBD, not finalized by the team yet.
+BogBank
 
 ## Group Members 
 

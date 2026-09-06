@@ -3,7 +3,7 @@ left to right direction
 
 actor Customer
 
-rectangle "Expense Tracker (project name TBD)" {
+rectangle "BogBank" {
   usecase "UC-01: Ingest Expense from\nBank Receipt (Gallery Watch)" as UC01
   usecase "UC-02: Track Income and\nExpenses Manually" as UC02
   usecase "UC-03: Review Income/Expense\nDashboard" as UC03
