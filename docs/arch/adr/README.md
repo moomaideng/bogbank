@@ -8,16 +8,16 @@ ADRs are numbered in the order they are decided. They are never renumbered. They
 
 | # | Title | Status |
 |---|-------|--------|
-| [01](./01_monolith-vs-microservices.md) | Adopt Microservices Architecture over Monolith | Accepted |
-| [02](./02_monorepo-vs-polyrepo.md) | Monorepo over Polyrepo | Accepted |
-| [03](./03_auth-pattern.md) | Google OAuth as Sole Auth Provider | Accepted |
-| [04](./04_database-choice.md) | PostgreSQL as Database Technology | Accepted |
-| [05](./05_client-delivery.md) | Mobile-First Web + PWA for Client Delivery | Accepted |
-| [06](./06_frontend-language-framework.md) | TypeScript + Next.js for Frontend | Accepted |
-| [07](./07_object-storage.md) | RustFS (Local) / S3-Compatible (Prod) Object Storage | Accepted |
-| [08](./08_backend-language.md) | Go for Backend Language | Accepted |
-| [09](./09_backend-http-api-stack.md) | chi + Huma for HTTP and API Contracts | Accepted |
-| [10](./10_backend-coding-style.md) | Hexagonal Architecture (Ports & Adapters) for Backend Services | Accepted |
+| [01](./01_monolith-vs-microservices.md) | Monolith vs Microservices | Accepted |
+| [02](./02_monorepo-vs-polyrepo.md) | Monorepo vs Polyrepo | Accepted |
+| [03](./03_auth-pattern.md) | Authentication Pattern | Accepted |
+| [04](./04_database-choice.md) | Database Technology | Accepted |
+| [05](./05_client-delivery.md) | Client Delivery | Accepted |
+| [06](./06_frontend-language-framework.md) | Frontend Language & Framework | Accepted |
+| [07](./07_object-storage.md) | Object Storage | Accepted |
+| [08](./08_backend-language.md) | Backend Language | Accepted |
+| [09](./09_backend-http-api-stack.md) | Backend HTTP & API Stack | Accepted |
+| [10](./10_backend-coding-style.md) | Backend Coding Style | Accepted |
 
 ## Deferred (Tier B)
 

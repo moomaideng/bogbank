@@ -1,4 +1,4 @@
-# ADR-07: RustFS (Local) / S3-Compatible (Prod) Object Storage
+# ADR-07: Object Storage
 
 ## Context
 

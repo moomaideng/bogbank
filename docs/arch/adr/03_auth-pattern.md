@@ -1,4 +1,4 @@
-# ADR-03: Google OAuth as Sole Auth Provider
+# ADR-03: Authentication Pattern
 
 ## Context
 

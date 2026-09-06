@@ -1,4 +1,4 @@
-# ADR-04: PostgreSQL as Database Technology
+# ADR-04: Database Technology
 
 ## Context
 

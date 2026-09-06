@@ -1,4 +1,4 @@
-# ADR-05: Mobile-First Web + PWA for Client Delivery
+# ADR-05: Client Delivery
 
 ## Context
 

@@ -1,4 +1,4 @@
-# ADR-06: TypeScript + Next.js for Frontend
+# ADR-06: Frontend Language & Framework
 
 ## Context
 

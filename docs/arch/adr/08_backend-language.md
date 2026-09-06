@@ -1,4 +1,4 @@
-# ADR-08: Go for Backend Language
+# ADR-08: Backend Language
 
 ## Context
 

@@ -1,4 +1,4 @@
-# ADR-10: Hexagonal Architecture (Ports & Adapters) for Backend Services
+# ADR-10: Backend Coding Style
 
 ## Context
 

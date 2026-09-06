@@ -1,4 +1,4 @@
-# ADR-09: chi + Huma for HTTP and API Contracts
+# ADR-09: Backend HTTP & API Stack
 
 ## Context
 

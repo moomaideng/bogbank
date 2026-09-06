@@ -1,4 +1,4 @@
-# ADR-01: Adopt Microservices Architecture over Monolith
+# ADR-01: Monolith vs Microservices
 
 ## Context
 

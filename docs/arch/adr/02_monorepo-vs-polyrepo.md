@@ -1,4 +1,4 @@
-# ADR-02: Monorepo over Polyrepo
+# ADR-02: Monorepo vs Polyrepo
 
 ## Context
 
