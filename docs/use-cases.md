@@ -1,6 +1,6 @@
 # Business Use Cases
 
-Per course convention, Sign In and Sign Out are not counted as Business Use Cases. These are the 3 primary Business Use Cases for the project.
+Per course convention, Sign In and Sign Out are not counted as Business Use Cases.
 
 ## UC-01: Ingest Expense from Bank Receipt (Gallery Watch)
 
@@ -8,10 +8,10 @@ Per course convention, Sign In and Sign Out are not counted as Business Use Case
 
 **Goal**: Record an expense with minimal manual typing by automatically picking up new bank receipt images from the device gallery instead of entering each transaction by hand.
 
-**Preconditions**: Customer is signed in; customer has at least one bank expense hook configured and has granted media-library access for that hook (see `Manage Bank Expense Hook`).
+**Preconditions**: Customer is signed in. Customer has at least one bank expense hook configured and has granted media-library access for that hook.
 
 **Main Flow**:
-1. Customer completes a bank payment; the bank app saves a receipt image to the device gallery (where the OS and bank app allow).
+1. Customer completes a bank payment. The bank app saves a receipt image to the device gallery (where the OS and bank app allow).
 2. System detects a newly added receipt image associated with the configured bank hook (media-library listener or polling via the native mobile app).
 3. System uploads the image to object storage.
 4. System extracts metadata (amount, merchant/counterparty, date) from the stored image.
@@ -27,7 +27,7 @@ Per course convention, Sign In and Sign Out are not counted as Business Use Case
 
 **Primary Actor**: Customer (college student)
 
-**Goal**: Record or correct income/expense transactions that aren't covered by gallery-watch receipt intake — cash transactions, other banks, blocked screenshots, a missed detection, or fixing a mistake.
+**Goal**: Record or correct income/expense transactions that aren't covered by gallery-watch receipt intake (cash transactions, other banks, blocked screenshots, a missed detection, or fixing a mistake).
 
 **Preconditions**: Customer is signed in.
 
@@ -39,15 +39,15 @@ Per course convention, Sign In and Sign Out are not counted as Business Use Case
 
 **Postcondition**: The customer's income/expense record set is complete and accurate.
 
-**Outcome the customer wants**: Nothing falls through the cracks even when the automatic gallery-watch flow doesn't apply.
+**Outcome the customer wants**: The customer can always add or fix income and expense entries manually, so every transaction is recorded even when automatic receipt detection does not work.
 
-## UC-03: Review Income/Expense Dashboard
+## UC-03: Review Income and Expense Dashboard
 
 **Primary Actor**: Customer (college student)
 
-**Goal**: Understand spending and income patterns over time and by bank provider, to make better financial decisions — this is the core problem the product solves (expenses are tedious to track and categorize across many channels).
+**Goal**: Understand spending and income patterns over time and by bank provider, to make better financial decisions. This is the core problem the product solves (expenses are tedious to track and categorize across many channels).
 
-**Preconditions**: Customer is signed in; customer has at least one income or expense record.
+**Preconditions**: Customer is signed in. Customer has at least one income or expense record.
 
 **Main Flow**:
 1. Customer opens the dashboard.
@@ -56,9 +56,9 @@ Per course convention, Sign In and Sign Out are not counted as Business Use Case
 
 **Postcondition**: None (read-only use case).
 
-**Outcome the customer wants**: An at-a-glance, filterable view of their financial activity without manual spreadsheet work.
+**Outcome the customer wants**: See spending and income patterns quickly, with filters, without building a spreadsheet.
 
-## Supporting Use Cases (not counted among the 3)
+## Supporting Use Cases (not counted among the 3 main use cases)
 
-- **Manage Bank Expense Hook** — Customer: add/edit/remove a bank provider hook and grant media-library permission for receipt detection. Prerequisite for UC-01.
-- **Manage Category** — Customer: add/edit/remove categories used to classify income/expense records. Included by UC-01 and UC-02.
+- **Manage Bank Expense Hook**: customer adds, edits, or removes a bank provider hook and grants media-library permission for receipt detection. Prerequisite for UC-01.
+- **Manage Category**: customer adds, edits, or removes categories used to classify income and expense records. Included by UC-01 and UC-02.
