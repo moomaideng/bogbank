@@ -22,7 +22,9 @@ The app watches for receipt images. The user picks which banks they use and give
 
 - College Student
 
-## Scenario (use-case & description)
+## Scenario (use-case & description)
+
+Formal flows are in `docs/use-cases.md` (UC-01–03).
 
 ### Sign In (Register + Login)
 
@@ -34,9 +36,7 @@ Sign out ends the current session.
 
 ### Manage bank expense hook
 
-Add / Edit / Remove bank expense hook, which can be chosen from a variety of bank providers (KBank, SCB, etc.). When a bank hook is added, the user grants media-library permission so the native app can watch for new receipt images from that provider (e.g. bank-specific albums or the Screenshots album).
-When a new receipt image is detected, the app uploads it and the system extracts metadata. Then notify the user that there's a new expense record, suggest a category, and let the user confirm or choose another category.
-After the user chooses a category, the system inserts an expense record.
+Add / Edit / Remove a bank expense hook, choosing from supported providers (KBank, SCB, etc.). When a hook is added, the user grants media-library permission so the native app can watch that provider's album or Screenshots.
 
 ### Manage income record
 
@@ -44,7 +44,7 @@ Add / Edit / Remove income record.
 
 ### Manage expense record
 
-Add / Edit / Remove expense record. As a fallback method. 
+Add / Edit / Remove expense record. Fallback when gallery-watch ingestion is not used or fails.
 
 ### Manage category
 
