@@ -464,20 +464,41 @@ Load tests (two types required):
 
 ---
 
-## Proposed work split (5 people, vertical slices)
+## Proposed work split (5 people, full-stack vertical slices)
 
-Slices are chosen so that no two people need to edit the same service in Sprint 1.
+Two rules drive this split:
 
-| Owner | Slice | Sprint 1 | Sprint 2 |
+1. **Everyone owns backend microservices.** Nobody is "the frontend person". Project progress is
+   graded on per-person GIT contribution three times (5% + 5% + 5%), and every member has to be able
+   to answer architecture questions in the 5-minute Q&A about code they actually wrote.
+2. **Frontend is sliced, not owned.** Each person builds the screens that consume their own service.
+   The Expo app is one codebase but the slices touch disjoint route folders, so they merge cleanly.
+
+| # | Services owned (backend) | Frontend slice | IPC styles they personally implement |
 | :---- | :---- | :---- | :---- |
-| A | Auth + Gateway | Auth SVC, Google PKCE, JWT, Traefik + ForwardAuth | Rate limiting, token refresh hardening |
-| B | Ledger | Ledger SVC REST + gRPC, categories, records, outbox | `ledger.*` events, idempotency |
-| C | Receipt | Receipt SVC, bank hooks, upload + dedupe, S3 | Consumers, state machine, push notifications |
-| D | Mobile | Expo app, sign-in, hook management, record CRUD | Gallery watch, notification confirm flow, charts |
-| E | Platform + Dashboard | Compose profiles, CI, Grafana stack, Dashboard SVC on PG | Redpanda, Reader SVC, ClickHouse projection |
+| P1 | **Auth SVC** + Traefik edge config + shared `pkg/outbox`, `pkg/eventbus` | Sign-in / sign-out, token storage, refresh interceptor | REST server, gRPC server (introspection), **Kafka producer/consumer library everyone reuses** |
+| P2 | **Ledger SVC** | Income / expense / category CRUD screens | REST server, gRPC server + gRPC client (`GetReceipt`), Kafka producer |
+| P3 | **Receipt SVC** | Bank hook management, media-library permission, upload, notification confirm sheet | REST server, gRPC server, Kafka producer **and** consumer |
+| P4 | **Dashboard SVC** + ClickHouse projection | Donut chart, bar chart, filter controls | REST server, gRPC client, Kafka consumer |
+| P5 | **Receipt Reader SVC** + **Suggestion SVC** + platform (Compose, CI, Grafana, k6) | App shell, navigation, shared UI kit, generated API client | Kafka consumer/producer ×2, gRPC client (`GetCategories`), REST admin API |
 
-Shared contracts (protobuf definitions, event envelope schema) are agreed **before** Sprint 1 coding
-and live in a shared monorepo package — they are the only cross-slice coupling.
+Every person ends up having written at least one REST handler, one gRPC endpoint or client, and one
+Kafka producer or consumer. That is deliberate: it is the same list the syllabus grades, and it means
+any of the five can field any Q&A question.
+
+**Load balance check.** P5's two services are the smallest in the system (Reader is stateless glue
+around a VLM call; Suggestion is rule matching) and both land in Sprint 2 — so P5 carries platform
+and app shell in Sprint 1, when the others are blocked on scaffolding anyway. P1's Auth SVC is small
+after Sprint 1, which is why P1 also owns the shared outbox/eventbus library that Sprint 2 depends on.
+
+**Frontend merge convention.** Each slice owns `app/(tabs)/<slice>/` and registers its routes; the
+shell, navigation, theme, and `components/ui/` belong to P5 and change only by PR. The generated
+API client is produced from each service's OpenAPI spec (ADR-09), so nobody hand-writes another
+person's request types.
+
+**Cross-slice contracts** — protobuf service definitions and the event envelope schema — are agreed
+**before** Sprint 1 coding and live in a shared monorepo package. They are the only coupling between
+slices, and changing one requires the downstream owner to review the PR.
 
 ---
 
