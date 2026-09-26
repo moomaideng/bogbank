@@ -20,7 +20,8 @@ type HTTP struct {
 }
 
 type GRPC struct {
-	Address string `mapstructure:"address" validate:"required"`
+	Address           string `mapstructure:"address" validate:"required"`
+	ReflectionEnabled bool   `mapstructure:"reflection_enabled"`
 }
 
 type Database struct {

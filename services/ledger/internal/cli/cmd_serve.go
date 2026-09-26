@@ -18,6 +18,7 @@ import (
 	"github.com/moomaideng/bogbank/services/ledger/internal/migrations"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var serveCmd = &cobra.Command{
@@ -56,6 +57,11 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	}
 	grpcServer := grpc.NewServer()
 	grpchandler.Register(grpcServer, dependencies)
+
+	if cfg.GRPC.ReflectionEnabled {
+		reflection.Register(grpcServer)
+	}
+
 	go func() {
 		slog.Info("grpc listening", "address", cfg.GRPC.Address)
 		if err := grpcServer.Serve(lis); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
