@@ -1,0 +1,6 @@
+http:
+  address: ":8080"
+grpc:
+  address: ":9090"
+database:
+  dsn: "postgres://user:password@localhost:5432/ledger?sslmode=disable"

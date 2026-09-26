@@ -27,6 +27,7 @@ Repo-root packages:
 |---|---|
 | `internal/config` | YAML file plus `PREFIX_NESTED_KEY` env overlay |
 | `internal/database` | bun + pgx Postgres |
+| `internal/migrator` | goose `migrate` cobra command |
 | `internal/baserepo` | CRUD, transactioner, cursor page types |
 | `internal/httpserver` | chi, Huma, `GET /livez`, `GET /readyz` |
 | `internal/objectstorage` | S3 API client (path-style) |
