@@ -1,0 +1,16 @@
+info:
+  name: DeleteCategory
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/users/:user_id/categories/:id"
+  params:
+    - name: user_id
+      value: "{{userId}}"
+      type: path
+    - name: id
+      value: "{{categoryId}}"
+      type: path
+  auth: inherit

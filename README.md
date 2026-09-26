@@ -31,9 +31,14 @@ make down
 
 Config overrides use the `LEDGER_` prefix (`LEDGER_HTTP_ADDRESS`, `LEDGER_DATABASE_DSN`, …).
 
+### API testing
+
+[`bruno/`](bruno/) contains a [Bruno](https://www.usebruno.com/) collection for testing REST and gRPC requests manually — open it in the Bruno app (env `local`) against a running local server.
+
 ## Repository
 
 | Path | What |
 |---|---|
+| [`bruno`](bruno/) | Bruno collection (REST + gRPC) |
 | [`services/template`](services/template/README.md) | Copy this when adding a service |
 | [`docs/arch/adr`](docs/arch/adr/README.md) | Architecture decisions |

@@ -1,0 +1,25 @@
+info:
+  name: UpdateCategory
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/users/:user_id/categories/:id"
+  params:
+    - name: user_id
+      value: "{{userId}}"
+      type: path
+    - name: id
+      value: "{{categoryId}}"
+      type: path
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "food"
+      }
+  auth: inherit

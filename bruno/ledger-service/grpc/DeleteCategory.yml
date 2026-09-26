@@ -1,0 +1,19 @@
+info:
+  name: DeleteCategory
+  type: grpc
+  seq: 5
+
+grpc:
+  url: "{{grpcUrl}}"
+  method: /ledger.v1.LedgerService/DeleteCategory
+  methodType: unary
+  protoFilePath: ../services/ledger/proto/ledger/v1/ledger.proto
+  message:
+    - title: message 1
+      selected: true
+      message: |-
+        {
+          "user_id": "{{userId}}",
+          "id": "{{categoryId}}"
+        }
+  auth: inherit

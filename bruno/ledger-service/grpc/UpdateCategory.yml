@@ -1,0 +1,19 @@
+info:
+  name: UpdateCategory
+  type: grpc
+  seq: 4
+
+grpc:
+  url: "{{grpcUrl}}"
+  method: /ledger.v1.LedgerService/UpdateCategory
+  methodType: unary
+  protoFilePath: ../services/ledger/proto/ledger/v1/ledger.proto
+  message:
+    - title: message 1
+      message: |-
+        {
+          "user_id": "{{userId}}",
+          "id": "{{categoryId}}",
+          "name": "test02"
+        }
+  auth: inherit
