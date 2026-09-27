@@ -4,30 +4,39 @@ Personal expense tracker. Course monorepo: Go backend services, shared libraries
 
 ## Prerequisites
 
-- [Go](https://go.dev/) (see `go.mod`)
 - [Docker](https://www.docker.com/) + Compose
-- [make](https://www.gnu.org/software/make/)
-- `protoc`, `protoc-gen-go`, and `protoc-gen-go-grpc` on `PATH` (only needed when regenerating stubs)
+- [Task](https://taskfile.dev/installation/)
+
+[Go 1.27](https://go.dev/) and `protoc` are optional (IDE use). The documented loop runs everything in Compose with pinned tooling.
 
 ## Get started
 
 From the repo root:
 
 ```bash
-make dev-ledger
+task dev:ledger
 ```
 
 When you're done:
 
 ```bash
-make down
+task down
 ```
 
-`make dev-ledger` also applies pending migrations before it listens. Proto stubs are already committed; run `make proto` only after changing `.proto` files.
+`task dev:ledger` starts infra (e.g., Postgres and RustFS) and ledger service with hot reload via [air](https://github.com/air-verse/air). Migrations apply on serve. Other presets:
+
+```bash
+task dev SVC=ledger   # same as dev:ledger
+task dev:full         # infra + every app service defined in Compose
+task proto            # regenerate gRPC stubs (pinned container; no host protoc)
+```
+
+Proto stubs are committed; run `task proto` only after changing `.proto` files.
 
 - HTTP: `http://localhost:8080`
 - gRPC: `localhost:9090`
 - Health: `GET /livez`, `GET /readyz`
+- S3 API (RustFS): `http://localhost:9000` (console `:9001`; keys `admin` / `admin1234`)
 
 Config overrides use the `LEDGER_` prefix (`LEDGER_HTTP_ADDRESS`, `LEDGER_DATABASE_DSN`, …).
 
@@ -39,6 +48,9 @@ Config overrides use the `LEDGER_` prefix (`LEDGER_HTTP_ADDRESS`, `LEDGER_DATABA
 
 | Path | What |
 |---|---|
-| [`bruno`](bruno/) | Bruno collection (REST + gRPC) |
-| [`services/template`](services/template/README.md) | Copy this when adding a service |
-| [`docs/arch/adr`](docs/arch/adr/README.md) | Architecture decisions |
+| [`bruno/`](bruno/) | Bruno collection (REST + gRPC) |
+| [`docker/`](docker/) | Dev images (Go+air, pinned protoc); add runtime-specific Dockerfiles here later |
+| [`services/template/`](services/template/README.md) | Copy this when adding a service |
+| [`docs/arch/adr/`](docs/arch/adr/README.md) | Architecture decisions |
+| [`Taskfile.yml`](Taskfile.yml) | Local developer commands |
+| [`.air.toml`](.air.toml) | Shared hot-reload config for Go services (`SERVICE` selects which) |
