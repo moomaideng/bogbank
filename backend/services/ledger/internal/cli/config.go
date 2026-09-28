@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/moomaideng/bogbank/internal/database"
-	"github.com/moomaideng/bogbank/services/ledger/internal/config"
+	"github.com/moomaideng/bogbank/backend/internal/database"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/config"
 	"github.com/spf13/cobra"
 )
 

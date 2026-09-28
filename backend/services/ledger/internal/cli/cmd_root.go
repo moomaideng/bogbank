@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/moomaideng/bogbank/internal/migrator"
-	"github.com/moomaideng/bogbank/services/ledger/internal/migrations"
+	"github.com/moomaideng/bogbank/backend/internal/migrator"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/migrations"
 	"github.com/spf13/cobra"
 )
 

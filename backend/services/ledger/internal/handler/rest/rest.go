@@ -5,8 +5,8 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
-	"github.com/moomaideng/bogbank/services/ledger/internal/deps"
-	"github.com/moomaideng/bogbank/services/ledger/internal/usecase"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/deps"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
 )
 
 func Register(api huma.API, deps deps.Deps) {

@@ -2,7 +2,7 @@
 
 Copy this directory when adding a service. Rename the module path under `services/<name>/` and the `TEMPLATE` environment prefix in `internal/config`.
 
-One Go module, `github.com/moomaideng/bogbank`, covers the repo. Shared clients live in the repo-root `internal/` tree. This service's code lives in `internal/` here, which other services cannot import.
+One Go module, `github.com/moomaideng/bogbank/backend`, covers `backend/`. Shared clients live in the `backend/internal/` tree. This service's code lives in `internal/` here, which other services cannot import.
 
 ## Layout
 

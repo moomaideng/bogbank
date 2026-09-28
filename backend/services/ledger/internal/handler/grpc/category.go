@@ -3,8 +3,8 @@ package grpc
 import (
 	"context"
 
-	ledgerv1 "github.com/moomaideng/bogbank/services/ledger/internal/proto/ledger/v1"
-	"github.com/moomaideng/bogbank/services/ledger/internal/usecase"
+	ledgerv1 "github.com/moomaideng/bogbank/backend/services/ledger/internal/proto/ledger/v1"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

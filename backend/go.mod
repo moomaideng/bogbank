@@ -1,4 +1,4 @@
-module github.com/moomaideng/bogbank
+module github.com/moomaideng/bogbank/backend
 
 go 1.27.0
 

@@ -604,7 +604,7 @@ const file_services_ledger_proto_ledger_v1_ledger_proto_rawDesc = "" +
 	"\vGetCategory\x12\x1d.ledger.v1.GetCategoryRequest\x1a\x1e.ledger.v1.GetCategoryResponse\x12U\n" +
 	"\x0eListCategories\x12 .ledger.v1.ListCategoriesRequest\x1a!.ledger.v1.ListCategoriesResponse\x12U\n" +
 	"\x0eUpdateCategory\x12 .ledger.v1.UpdateCategoryRequest\x1a!.ledger.v1.UpdateCategoryResponse\x12U\n" +
-	"\x0eDeleteCategory\x12 .ledger.v1.DeleteCategoryRequest\x1a!.ledger.v1.DeleteCategoryResponseBQZOgithub.com/moomaideng/bogbank/services/ledger/internal/proto/ledger/v1;ledgerv1b\x06proto3"
+	"\x0eDeleteCategory\x12 .ledger.v1.DeleteCategoryRequest\x1a!.ledger.v1.DeleteCategoryResponseBYZWgithub.com/moomaideng/bogbank/backend/services/ledger/internal/proto/ledger/v1;ledgerv1b\x06proto3"
 
 var (
 	file_services_ledger_proto_ledger_v1_ledger_proto_rawDescOnce sync.Once

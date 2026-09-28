@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moomaideng/bogbank/internal/database"
+	"github.com/moomaideng/bogbank/backend/internal/database"
 	"github.com/spf13/cobra"
 )
 

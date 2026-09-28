@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-MODULE="${MODULE:-github.com/moomaideng/bogbank}"
+MODULE="${MODULE:-github.com/moomaideng/bogbank/backend}"
 
 # Collect under /src so Windows hosts never need find on PATH.
 set --

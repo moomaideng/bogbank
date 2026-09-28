@@ -2,7 +2,7 @@
 
 ## Layout
 
-Backend and mobile client live in one repo, in separate top-level trees. No `go.work`; the Go module is `github.com/moomaideng/bogbank` under `backend/`.
+Backend and mobile client live in one repo, in separate top-level trees. No `go.work`; the Go module is `github.com/moomaideng/bogbank/backend` under `backend/`.
 
 - `backend/internal/` is shared: config, database, migrator, baserepo, httpserver, objectstorage.
 - A service lives at `backend/services/<name>/`. Its `internal/` is private to that service.

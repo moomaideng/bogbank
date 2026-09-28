@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/moomaideng/bogbank/services/ledger/internal/deps"
-	ledgerv1 "github.com/moomaideng/bogbank/services/ledger/internal/proto/ledger/v1"
-	"github.com/moomaideng/bogbank/services/ledger/internal/usecase"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/deps"
+	ledgerv1 "github.com/moomaideng/bogbank/backend/services/ledger/internal/proto/ledger/v1"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/moomaideng/bogbank/services/template/internal/cli"
+	"github.com/moomaideng/bogbank/backend/services/template/internal/cli"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/moomaideng/bogbank/services/ledger/internal/usecase"
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
 )
 
 func TestWriteErr(t *testing.T) {

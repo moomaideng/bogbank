@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ledger.v1;
 
-option go_package = "github.com/moomaideng/bogbank/services/ledger/internal/proto/ledger/v1;ledgerv1";
+option go_package = "github.com/moomaideng/bogbank/backend/services/ledger/internal/proto/ledger/v1;ledgerv1";
 
 import "google/protobuf/timestamp.proto";
 

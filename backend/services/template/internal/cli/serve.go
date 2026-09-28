@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/moomaideng/bogbank/internal/database"
-	"github.com/moomaideng/bogbank/internal/httpserver"
-	"github.com/moomaideng/bogbank/internal/objectstorage"
-	"github.com/moomaideng/bogbank/services/template/internal/config"
+	"github.com/moomaideng/bogbank/backend/internal/database"
+	"github.com/moomaideng/bogbank/backend/internal/httpserver"
+	"github.com/moomaideng/bogbank/backend/internal/objectstorage"
+	"github.com/moomaideng/bogbank/backend/services/template/internal/config"
 	"github.com/spf13/cobra"
 )
 

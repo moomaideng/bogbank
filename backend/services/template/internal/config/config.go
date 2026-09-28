@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	sharedconfig "github.com/moomaideng/bogbank/internal/config"
+	sharedconfig "github.com/moomaideng/bogbank/backend/internal/config"
 )
 
 const envPrefix = "TEMPLATE"
