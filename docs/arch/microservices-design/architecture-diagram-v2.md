@@ -9,8 +9,8 @@ diagrams** (Presentation Guidelines, Part 1), so v2 is structured as C4 instead.
 | :---- | :---- | :---- |
 | L1 Context | BogBank vs. its users and external systems | This document |
 | L2 Container | Services, datastores, infrastructure | This document |
-| L3 Component | Internals of Ledger SVC and Receipt SVC | Sprint 2 |
-| L4 Code | Hexagonal port/adapter layout (ADR-10) | Sprint 3, one service only |
+| L3 Component | Internals of Ledger SVC (Hexagonal architecture) | This document |
+| L4 Code | Hexagonal port/adapter layout (ADR-10, Ledger SVC) | This document |
 | Sequence | UC-01 ingest, UC-02 manual, UC-03 dashboard | This document |
 
 ---
@@ -43,7 +43,7 @@ flowchart TB
     Push[["Expo Push Notification Service"]]
     S3[["S3-compatible object storage<br/>(RustFS dev / cloud prod, ADR-07)"]]
 
-    Customer -- "REST/HTTPS: manage hooks, records,<br/>confirm receipts, view dashboard" --> System
+    Customer -- "REST: manage hooks, records,<br/>confirm receipts, view dashboard" --> System
     Customer -. "OAuth 2.0 + PKCE sign-in" .-> Google
     System -- "verify ID token" --> Google
     System -- "extract receipt fields" --> VLM
@@ -86,7 +86,7 @@ flowchart TB
         Blob[("S3 / RustFS<br/>receipt images")]
     end
 
-    Client == "REST / HTTPS" ==> Traefik
+    Client == "REST" ==> Traefik
     Traefik -- REST --> Auth
     Traefik -- REST --> Receipt
     Traefik -- REST --> Ledger
@@ -225,6 +225,292 @@ come straight from the course textbook (Richardson, *Microservices Patterns*).
 | **Business-key idempotency** | Ledger `CreateExpense` | `UNIQUE (receipt_id)` — double-tapping the notification cannot create two expenses. |
 | **Dead letter topic** | Reader, Suggestion | Extraction failures go to `*.dlq`; receipt is marked `failed` and the user falls back to manual entry (NFR7). |
 | **Read-model replay** | Dashboard | ClickHouse rebuilt from Postgres/Kafka; corruption is a routine fix, not an incident. |
+
+---
+
+## L3 — Component Diagram (Ledger Service)
+
+The **Ledger Service** is the financial system of record. Consistent with **ADR-10 (Backend Coding Style: Hexagonal Architecture)** and **ADR-09 (Backend HTTP & API Stack: chi + Huma)**, the service strictly isolates its core business logic from delivery protocols, databases, and remote service clients via ports and adapters.
+
+```mermaid
+flowchart TB
+    subgraph External["Callers & Remote Collaborators"]
+        Traefik["<b>Traefik API Gateway</b><br/>Routes /records, /categories"]
+        Dash["<b>Dashboard SVC</b><br/>Direct gRPC client"]
+        KafkaIn["<b>Redpanda</b><br/>Topic: receipt.suggested"]
+        Postgres[("<b>PostgreSQL</b><br/>ledger schema + outbox")]
+        ReceiptSVC["<b>Receipt SVC</b><br/>gRPC server"]
+        KafkaOut["<b>Redpanda</b><br/>Topic: ledger.*"]
+    end
+
+    subgraph LedgerSVC["Ledger Service (Go) — Hexagonal Architecture (ADR-10)"]
+        subgraph InboundAdapters["Inbound / Driving Adapters"]
+            HTTPAdapter["<b>HTTP Handler Adapter</b><br/>chi router + Huma v2 (ADR-09)<br/>OpenAPI 3.1 validation"]
+            GRPCAdapter["<b>gRPC Server Adapter</b><br/>GetRecords, GetCategories"]
+            EventConsumer["<b>Kafka Consumer Adapter</b><br/>receipt.suggested consumer"]
+        end
+
+        subgraph InboundPorts["Inbound Ports (Interfaces)"]
+            RecordUC["<b>RecordUseCase</b><br/>CreateExpense()<br/>CreateIncome()<br/>UpdateRecord()<br/>DeleteRecord()"]
+            CategoryUC["<b>CategoryUseCase</b><br/>ListCategories()<br/>CreateCategory()"]
+            QueryUC["<b>RecordQueryUseCase</b><br/>GetRecordsByFilter()"]
+        end
+
+        subgraph DomainCore["Domain Core (Hexagon)"]
+            RecordService["<b>RecordService</b><br/>Core financial rules<br/>Business-key dedupe"]
+            CategoryService["<b>CategoryService</b><br/>Category rules & defaults"]
+            DomainEntities["<b>Domain Entities</b><br/>Record, Category, Money"]
+        end
+
+        subgraph OutboundPorts["Outbound Ports (Interfaces)"]
+            RecordRepoPort["<b>RecordRepository</b><br/>Save(), FindByID(), Query()"]
+            CategoryRepoPort["<b>CategoryRepository</b><br/>FindAll(), FindByID()"]
+            ReceiptClientPort["<b>ReceiptClient</b><br/>GetReceipt(receipt_id)"]
+            OutboxPort["<b>OutboxPublisher</b><br/>SaveEvent(tx, event)"]
+        end
+
+        subgraph OutboundAdapters["Outbound / Driven Adapters"]
+            PGRepoAdapter["<b>Postgres Repository Adapter</b><br/>Bun ORM (PostgreSQL)"]
+            ReceiptGRPCAdapter["<b>Receipt gRPC Client Adapter</b><br/>Typed protobuf client"]
+            OutboxAdapter["<b>Transactional Outbox Adapter</b><br/>Writes to ledger.outbox"]
+        end
+    end
+
+    Traefik -- "REST" --> HTTPAdapter
+    Dash -- "gRPC: GetRecords" --> GRPCAdapter
+    KafkaIn -- "Consume event" --> EventConsumer
+
+    HTTPAdapter --> RecordUC
+    HTTPAdapter --> CategoryUC
+    GRPCAdapter --> QueryUC
+    GRPCAdapter --> CategoryUC
+    EventConsumer --> RecordUC
+
+    RecordUC -. "implements" .-> RecordService
+    CategoryUC -. "implements" .-> CategoryService
+    QueryUC -. "implements" .-> RecordService
+
+    RecordService --> DomainEntities
+    CategoryService --> DomainEntities
+
+    RecordService --> RecordRepoPort
+    RecordService --> ReceiptClientPort
+    RecordService --> OutboxPort
+    CategoryService --> CategoryRepoPort
+
+    RecordRepoPort -. "implements" .-> PGRepoAdapter
+    CategoryRepoPort -. "implements" .-> PGRepoAdapter
+    ReceiptClientPort -. "implements" .-> ReceiptGRPCAdapter
+    OutboxPort -. "implements" .-> OutboxAdapter
+
+    PGRepoAdapter --> Postgres
+    OutboxAdapter --> Postgres
+    ReceiptGRPCAdapter -- "gRPC: GetReceipt" --> ReceiptSVC
+    OutboxAdapter -. "Outbox relayed to" .-> KafkaOut
+```
+
+### Component responsibilities (Ledger Service)
+
+| Component | Layer | Purpose | Technology / Pattern |
+| :---- | :---- | :---- | :---- |
+| **HTTP Handler Adapter** | Inbound Adapter | Exposes REST endpoints (`/records`, `/categories`), deserializes JSON, validates inputs, generates OpenAPI 3.1 | chi + Huma v2 (`humachi` adapter, ADR-09) |
+| **gRPC Server Adapter** | Inbound Adapter | Handles synchronous internal RPC calls (`GetRecords`, `GetCategories`) from Dashboard and Suggestion services | gRPC, Go protobuf |
+| **Kafka Consumer Adapter** | Inbound Adapter | Consumes asynchronous `receipt.suggested` events, deduplicates in Redis, triggers auto-creation flow | Segmentio/kafka-go or confluent-kafka-go |
+| **RecordService** | Domain Core | Implements financial transaction invariants: positive amounts, valid categories, `UNIQUE (receipt_id)` | Pure Go (no external dependencies, ADR-10) |
+| **CategoryService** | Domain Core | Manages system default categories (Food, Transport, Bills) and custom user categories | Pure Go |
+| **Postgres Repository Adapter**| Outbound Adapter | Executes SQL queries and transactions using Bun ORM connection pool | `uptrace/bun`, PostgreSQL |
+| **Receipt gRPC Client Adapter**| Outbound Adapter | Calls Receipt SVC's `GetReceipt` endpoint to fetch receipt details for verified ledger records | Go gRPC Client |
+| **Transactional Outbox Adapter**| Outbound Adapter | Appends domain events to `ledger.outbox` inside the same SQL transaction as the record | Transactional Outbox pattern |
+
+---
+
+## L3b — Component Diagram (Receipt Service)
+
+The **Receipt Service** is the asynchronous ingestion engine. It handles media gallery uploads, deduplicates receipts by SHA-256 content hash (UC-01), maintains receipt lifecycle states (`uploaded` $\rightarrow$ `extracted` $\rightarrow$ `suggested` $\rightarrow$ `confirmed`), coordinates with object storage, and triggers push notifications.
+
+```mermaid
+flowchart TB
+    subgraph External["Callers & Remote Collaborators"]
+        Traefik["<b>Traefik API Gateway</b><br/>Routes /receipts/*, /bank-hooks/*"]
+        LedgerSVC["<b>Ledger SVC</b><br/>gRPC caller: GetReceipt"]
+        KafkaIn["<b>Redpanda</b><br/>Topics: receipt.extracted, receipt.suggested, ledger.expense.created"]
+        Postgres[("<b>PostgreSQL</b><br/>receipt schema + outbox")]
+        ObjectStorage[("<b>S3 / RustFS</b><br/>Receipt images (ADR-07)")]
+        ExpoPush["<b>Expo Push Service</b><br/>Mobile push delivery"]
+        KafkaOut["<b>Redpanda</b><br/>Topic: receipt.uploaded"]
+    end
+
+    subgraph ReceiptSVC["Receipt Service (Go) — Hexagonal Architecture (ADR-10)"]
+        subgraph InboundAdapters["Inbound / Driving Adapters"]
+            HTTPAdapter["<b>HTTP Handler Adapter</b><br/>chi router + Huma v2 (ADR-09)<br/>Multipart upload & hook management"]
+            GRPCAdapter["<b>gRPC Server Adapter</b><br/>GetReceipt RPC"]
+            EventConsumer["<b>Kafka Consumer Adapter</b><br/>Consumes async pipeline events"]
+        end
+
+        subgraph InboundPorts["Inbound Ports (Interfaces)"]
+            UploadUC["<b>ReceiptUploadUseCase</b><br/>UploadReceipt()<br/>DeduplicateByHash()"]
+            HookUC["<b>BankHookUseCase</b><br/>ManageBankHooks()"]
+            LifecycleUC["<b>ReceiptLifecycleUseCase</b><br/>HandleExtraction()<br/>HandleSuggestion()<br/>HandleConfirmation()"]
+        end
+
+        subgraph DomainCore["Domain Core (Hexagon)"]
+            ReceiptService["<b>ReceiptService</b><br/>Receipt state machine<br/>SHA-256 dedupe check"]
+            HookService["<b>BankHookService</b><br/>Provider validation (KBank, SCB)"]
+            DomainEntities["<b>Domain Entities</b><br/>Receipt, BankHook, ReceiptEvent"]
+        end
+
+        subgraph OutboundPorts["Outbound Ports (Interfaces)"]
+            ReceiptRepoPort["<b>ReceiptRepository</b><br/>Save(), FindByID(), CheckDedupe()"]
+            HookRepoPort["<b>BankHookRepository</b><br/>SaveHook(), ListHooks()"]
+            BlobPort["<b>ObjectStorageClient</b><br/>PutObject(), GetObject()"]
+            PushPort["<b>NotificationClient</b><br/>SendPushNotification()"]
+            OutboxPort["<b>OutboxPublisher</b><br/>SaveEvent(tx, event)"]
+        end
+
+        subgraph OutboundAdapters["Outbound / Driven Adapters"]
+            BunRepoAdapter["<b>Postgres Repository Adapter</b><br/>Bun ORM (PostgreSQL)"]
+            S3Adapter["<b>S3 Storage Adapter</b><br/>AWS S3 SDK (RustFS / Cloud S3)"]
+            PushAdapter["<b>Expo Push Adapter</b><br/>Expo Push HTTP Client"]
+            OutboxAdapter["<b>Transactional Outbox Adapter</b><br/>Writes to receipt.outbox"]
+        end
+    end
+
+    Traefik -- "REST" --> HTTPAdapter
+    LedgerSVC -- "gRPC: GetReceipt" --> GRPCAdapter
+    KafkaIn -- "Consume events" --> EventConsumer
+
+    HTTPAdapter --> UploadUC
+    HTTPAdapter --> HookUC
+    GRPCAdapter --> LifecycleUC
+    EventConsumer --> LifecycleUC
+
+    UploadUC -. "implements" .-> ReceiptService
+    HookUC -. "implements" .-> HookService
+    LifecycleUC -. "implements" .-> ReceiptService
+
+    ReceiptService --> DomainEntities
+    HookService --> DomainEntities
+
+    ReceiptService --> ReceiptRepoPort
+    ReceiptService --> BlobPort
+    ReceiptService --> PushPort
+    ReceiptService --> OutboxPort
+    HookService --> HookRepoPort
+
+    ReceiptRepoPort -. "implements" .-> BunRepoAdapter
+    HookRepoPort -. "implements" .-> BunRepoAdapter
+    BlobPort -. "implements" .-> S3Adapter
+    PushPort -. "implements" .-> PushAdapter
+    OutboxPort -. "implements" .-> OutboxAdapter
+
+    BunRepoAdapter --> Postgres
+    OutboxAdapter --> Postgres
+    S3Adapter -- "S3 API" --> ObjectStorage
+    PushAdapter -- "HTTPS" --> ExpoPush
+    OutboxAdapter -. "Outbox relayed to" .-> KafkaOut
+```
+
+### Component responsibilities (Receipt Service)
+
+| Component | Layer | Purpose | Technology / Pattern |
+| :---- | :---- | :---- | :---- |
+| **HTTP Handler Adapter** | Inbound Adapter | Exposes `POST /receipts` (multipart image upload) and bank hook management routes | chi + Huma v2 (`humachi` adapter, ADR-09) |
+| **gRPC Server Adapter** | Inbound Adapter | Serves `GetReceipt` for Ledger Service to verify receipt metadata upon user confirmation | gRPC, Go protobuf |
+| **Kafka Consumer Adapter** | Inbound Adapter | Listens for `receipt.extracted`, `receipt.suggested`, and `ledger.expense.created` | Segmentio/kafka-go or confluent-kafka-go |
+| **ReceiptService** | Domain Core | Manages receipt state machine (`uploaded` $\rightarrow$ `extracted` $\rightarrow$ `suggested` $\rightarrow$ `confirmed`), enforces SHA-256 deduplication | Pure Go (ADR-10) |
+| **BankHookService** | Domain Core | Validates configured bank providers (KBank, SCB, etc.) and user gallery permissions | Pure Go (ADR-10) |
+| **Postgres Repository Adapter**| Outbound Adapter | Persists receipts, bank hooks, append-only `receipt_events`, and outbox table | `uptrace/bun`, PostgreSQL |
+| **S3 Storage Adapter** | Outbound Adapter | Uploads raw encrypted receipt images to S3-compatible storage | AWS S3 Go SDK v2 (RustFS dev / S3 prod, ADR-07) |
+| **Expo Push Adapter** | Outbound Adapter | Dispatches push notifications to customer mobile device when category is suggested | Expo Push HTTP API |
+| **Transactional Outbox Adapter**| Outbound Adapter | Appends `receipt.uploaded` to `receipt.outbox` atomically with the receipt insertion | Transactional Outbox pattern |
+
+---
+
+## L4 — Code Diagram (Ledger Service: Record Domain Hexagonal Layout)
+
+Zooming into the code structure of the `Record` bounded context within `Ledger SVC`. Per **ADR-10**, the domain core depends strictly on interfaces (ports), while HTTP handlers, DB drivers, and gRPC clients are pluggable adapters.
+
+```mermaid
+classDiagram
+    class RecordHandler {
+        -recordUC RecordUseCase
+        +PostExpense(ctx context.Context, input PostExpenseInput) (PostExpenseOutput, error)
+        +PostIncome(ctx context.Context, input PostIncomeInput) (PostIncomeOutput, error)
+        +RegisterRoutes(api huma.API)
+    }
+
+    class RecordUseCase {
+        <<interface>>
+        +CreateExpenseFromReceipt(ctx context.Context, cmd CreateExpenseCmd) (*Record, error)
+        +CreateManualExpense(ctx context.Context, cmd CreateManualExpenseCmd) (*Record, error)
+        +GetRecords(ctx context.Context, filter RecordFilter) ([]Record, error)
+    }
+
+    class RecordService {
+        -repo RecordRepository
+        -receiptClient ReceiptClient
+        -outbox OutboxPublisher
+        +CreateExpenseFromReceipt(ctx context.Context, cmd CreateExpenseCmd) (*Record, error)
+        +CreateManualExpense(ctx context.Context, cmd CreateManualExpenseCmd) (*Record, error)
+        +GetRecords(ctx context.Context, filter RecordFilter) ([]Record, error)
+    }
+
+    class RecordRepository {
+        <<interface>>
+        +Save(ctx context.Context, tx DBTx, record *Record) error
+        +FindByID(ctx context.Context, id uuid.UUID) (*Record, error)
+        +FindByFilter(ctx context.Context, filter RecordFilter) ([]Record, error)
+    }
+
+    class PostgresRecordRepo {
+        -db *bun.DB
+        +Save(ctx context.Context, tx DBTx, record *Record) error
+        +FindByID(ctx context.Context, id uuid.UUID) (*Record, error)
+        +FindByFilter(ctx context.Context, filter RecordFilter) ([]Record, error)
+    }
+
+    class ReceiptClient {
+        <<interface>>
+        +GetReceipt(ctx context.Context, id uuid.UUID) (*ReceiptDetails, error)
+    }
+
+    class GRPCReceiptClient {
+        -client pb.ReceiptServiceClient
+        +GetReceipt(ctx context.Context, id uuid.UUID) (*ReceiptDetails, error)
+    }
+
+    class OutboxPublisher {
+        <<interface>>
+        +Publish(ctx context.Context, tx DBTx, event OutboxEvent) error
+    }
+
+    class PostgresOutboxPublisher {
+        -db *bun.DB
+        +Publish(ctx context.Context, tx DBTx, event OutboxEvent) error
+    }
+
+    class Record {
+        +ID uuid.UUID
+        +UserID uuid.UUID
+        +Amount decimal.Decimal
+        +Type RecordType
+        +CategoryID uuid.UUID
+        +ReceiptID *uuid.UUID
+        +BankProvider *string
+        +OccurredAt time.Time
+        +Validate() error
+    }
+
+    RecordHandler ..> RecordUseCase : drives (HTTP)
+    RecordService ..|> RecordUseCase : implements port
+    RecordService --> RecordRepository : driven port
+    RecordService --> ReceiptClient : driven port
+    RecordService --> OutboxPublisher : driven port
+    RecordService ..> Record : constructs & validates
+    PostgresRecordRepo ..|> RecordRepository : adapter implements
+    GRPCReceiptClient ..|> ReceiptClient : adapter implements
+    PostgresOutboxPublisher ..|> OutboxPublisher : adapter implements
+```
 
 ---
 
@@ -447,7 +733,7 @@ Load tests (two types required):
 | Load test, 2 types | Constant-arrival-rate + spike/stress (k6) |
 | Risk matrix ≥3 issues | Below |
 | 1 measurable quality attribute | Ingest-pipeline performance; resilience secondary |
-| C4 four levels + sequence | This document (L1/L2 + sequences); L3/L4 Sprint 2–3 |
+| C4 four levels + sequence | This document (L1, L2, L3, L4 complete + sequences) |
 
 ---
 
