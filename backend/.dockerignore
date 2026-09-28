@@ -9,8 +9,5 @@ build-errors.log
 # Taskfile
 .task/
 
-.git/
 bruno/
-docs/
 *.md
-node_modules/

@@ -47,7 +47,7 @@ internal/adapter/objectstorage/receipt.go
 
 ## Run
 
-From the repo root, with no database:
+From `backend/`, with no database:
 
 ```bash
 go run ./services/template serve --config services/template/config.yaml

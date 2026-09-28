@@ -48,9 +48,11 @@ Config overrides use the `LEDGER_` prefix (`LEDGER_HTTP_ADDRESS`, `LEDGER_DATABA
 
 | Path | What |
 |---|---|
-| [`bruno/`](bruno/) | Bruno collection (REST + gRPC) |
-| [`docker/`](docker/) | Dev images (Go+air, pinned protoc); add runtime-specific Dockerfiles here later |
-| [`services/template/`](services/template/README.md) | Copy this when adding a service |
+| [`backend/`](backend/) | Go module: shared `internal/` libraries plus one tree per service under `services/` |
+| [`backend/bruno/`](backend/bruno/) | Bruno collection (REST + gRPC) |
+| [`backend/docker/`](backend/docker/) | Dev images (Go+air, pinned protoc); add runtime-specific Dockerfiles here later |
+| [`backend/services/template/`](backend/services/template/README.md) | Copy this when adding a service |
+| `mobile/` | Expo (React Native) client |
 | [`docs/arch/adr/`](docs/arch/adr/README.md) | Architecture decisions |
 | [`Taskfile.yml`](Taskfile.yml) | Local developer commands |
-| [`.air.toml`](.air.toml) | Shared hot-reload config for Go services (`SERVICE` selects which) |
+| [`backend/.air.toml`](backend/.air.toml) | Shared hot-reload config for Go services (`SERVICE` selects which) |

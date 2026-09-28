@@ -43,7 +43,7 @@ services:
   ledger:
     profiles: [ledger]
     build:
-      context: .
+      context: ./backend
       dockerfile: docker/go-dev.Dockerfile
     environment:
       SERVICE: ledger
@@ -52,7 +52,7 @@ services:
       - "8080:8080"
       - "9090:9090"
     volumes:
-      - .:/app
+      - ./backend:/app
       - go_mod_cache:/go/pkg/mod
       - go_build_cache:/root/.cache/go-build
     depends_on:
