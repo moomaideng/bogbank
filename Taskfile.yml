@@ -42,35 +42,65 @@ tasks:
         vars:
           SVC: ledger
 
+  backend:fmt:
+    desc: Format the Go module
+    dir: backend
+    cmds:
+      - go tool golangci-lint fmt ./...
+
+  backend:lint:
+    desc: Lint the Go module for format and errors
+    dir: backend
+    cmds:
+      - go tool golangci-lint run ./...
+
+  backend:test:
+    desc: Run Go unit tests
+    dir: backend
+    cmds:
+      - go test ./...
+
+  backend:check:
+    desc: Lint and test the Go module
+    cmds:
+      - task: backend:lint
+      - task: backend:test
+
   mobile:install:
     desc: Install mobile app dependencies
+    dir: mobile
     cmds:
-      - pnpm --dir mobile install
+      - pnpm install
 
   mobile:start:
     desc: Start the Expo dev server (task mobile:start -- --localhost when only USB reaches the backend)
+    dir: mobile
     cmds:
-      - pnpm --dir mobile start {{.CLI_ARGS}}
+      - pnpm start {{.CLI_ARGS}}
 
   mobile:android:
     desc: Build and install the mobile dev client on an Android emulator or connected device
+    dir: mobile
     cmds:
-      - pnpm --dir mobile android
+      - pnpm android
 
   mobile:ios:
     desc: Build and install the mobile dev client on an iOS Simulator or connected device (macOS only)
+    dir: mobile
     cmds:
-      - pnpm --dir mobile ios
+      - pnpm ios
 
   mobile:prebuild:clean:
     desc: Regenerate android/ after a native dependency or app.json change
+    dir: mobile
     cmds:
-      - pnpm --dir mobile exec expo prebuild --clean
+      - pnpm exec expo prebuild --clean
 
   mobile:format:
     desc: Format the mobile app with Prettier
+    dir: mobile
     cmds:
-      - pnpm --dir mobile format
+      - pnpm format
 
   mobile:check:
     desc: Run every mobile check (format:check, lint, typecheck, expo-doctor)

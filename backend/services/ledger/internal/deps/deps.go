@@ -2,9 +2,10 @@
 package deps
 
 import (
+	"github.com/uptrace/bun"
+
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/adapter/postgres"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
-	"github.com/uptrace/bun"
 )
 
 type Deps struct {

@@ -10,15 +10,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"github.com/moomaideng/bogbank/backend/internal/database"
 	"github.com/moomaideng/bogbank/backend/internal/httpserver"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/deps"
 	grpchandler "github.com/moomaideng/bogbank/backend/services/ledger/internal/handler/grpc"
 	resthandler "github.com/moomaideng/bogbank/backend/services/ledger/internal/handler/rest"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/migrations"
-	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 var serveCmd = &cobra.Command{
@@ -40,7 +41,11 @@ func runServe(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			slog.Error("close postgres", "err", err)
+		}
+	}()
 
 	migrateCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()

@@ -7,11 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/spf13/cobra"
+
 	"github.com/moomaideng/bogbank/backend/internal/database"
 	"github.com/moomaideng/bogbank/backend/internal/httpserver"
 	"github.com/moomaideng/bogbank/backend/internal/objectstorage"
 	"github.com/moomaideng/bogbank/backend/services/template/internal/config"
-	"github.com/spf13/cobra"
 )
 
 var serveCmd = &cobra.Command{
@@ -47,7 +48,11 @@ func runServe(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		defer db.Close()
+		defer func() {
+			if err := db.Close(); err != nil {
+				slog.Error("close postgres", "err", err)
+			}
+		}()
 		pingers = append(pingers, db)
 		slog.Info("postgres connected")
 	}

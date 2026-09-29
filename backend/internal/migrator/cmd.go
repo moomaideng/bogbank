@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moomaideng/bogbank/backend/internal/database"
 	"github.com/spf13/cobra"
+
+	"github.com/moomaideng/bogbank/backend/internal/database"
 )
 
 // OpenDB returns a database connection. The caller owns flags and config.

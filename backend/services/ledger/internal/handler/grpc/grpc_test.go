@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
 )
 
 func TestStatusErr(t *testing.T) {

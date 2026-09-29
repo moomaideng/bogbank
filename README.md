@@ -44,6 +44,14 @@ Config overrides use the `LEDGER_` prefix (`LEDGER_HTTP_ADDRESS`, `LEDGER_DATABA
 
 [`bruno/`](bruno/) contains a [Bruno](https://www.usebruno.com/) collection for testing REST and gRPC requests manually — open it in the Bruno app (env `local`) against a running local server.
 
+## Quality checks
+
+```bash
+task backend:check   # golangci-lint (format and errors) and go test
+task backend:fmt     # rewrite Go formatting locally
+task mobile:check    # format, lint, typecheck, expo-doctor
+```
+
 ## Repository
 
 | Path | What |
