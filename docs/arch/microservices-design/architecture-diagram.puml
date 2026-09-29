@@ -54,37 +54,36 @@ Rel(customer, mobile_app, "Interacts with", "UI")
 Rel(mobile_app, google_auth, "OAuth 2.0 PKCE sign-in", "HTTPS")
 Rel(mobile_app, traefik, "API requests", "REST")
 
-Rel(traefik, auth_svc, "ForwardAuth token validation", "REST")
-Rel(traefik, auth_svc, "Routes /auth/*", "REST")
+Rel(traefik, auth_svc, "Routes /auth/* and ForwardAuth", "REST")
 Rel(traefik, receipt_svc, "Routes /receipts/*", "REST")
 Rel(traefik, ledger_svc, "Routes /records/*, /categories/*", "REST")
 Rel(traefik, dash_svc, "Routes /dashboard/*", "REST")
 
 Rel(auth_svc, google_auth, "Verifies Google ID tokens", "HTTPS")
-Rel(auth_svc, auth_db, "Reads/writes users & tokens", "SQL")
+Rel(auth_svc, auth_db, "Reads/writes users and tokens", "SQL")
 Rel(auth_svc, redis_db, "Caches session tokens", "Redis")
 
-Rel(receipt_svc, receipt_db, "Persists receipts & outbox", "SQL")
-Rel(receipt_svc, blob_store, "Stores receipt images", "S3 API")
+Rel(receipt_svc, receipt_db, "Persists receipts and outbox", "SQL")
+Rel(receipt_svc, blob_store, "Puts receipt images", "S3 API")
 Rel(receipt_svc, expo_push, "Triggers push notifications", "HTTPS")
 
-Rel(receipt_svc, reader_svc, "receipt.uploaded", "Kafka")
-Rel(reader_svc, blob_store, "Fetches receipt image", "S3 API")
+Rel(reader_svc, blob_store, "Gets receipt image", "S3 API")
 Rel(reader_svc, vlm_api, "Extracts fields via VLM", "HTTPS")
-Rel(reader_svc, receipt_svc, "receipt.extracted", "Kafka")
-Rel(reader_svc, suggest_svc, "receipt.extracted", "Kafka")
 
-Rel(suggest_svc, ledger_svc, "Queries GetCategories", "gRPC")
-Rel(suggest_svc, redis_db, "Caches categories & dedupes", "Redis")
-Rel(suggest_svc, receipt_svc, "receipt.suggested", "Kafka")
+Rel(suggest_svc, ledger_svc, "GetCategories", "gRPC")
+Rel(suggest_svc, redis_db, "Caches categories and dedupes", "Redis")
 
-Rel(ledger_svc, receipt_svc, "Queries GetReceipt (verification)", "gRPC")
-Rel(ledger_svc, ledger_db, "Persists records & outbox", "SQL")
-Rel(ledger_svc, receipt_svc, "ledger.expense.created", "Kafka")
-Rel(ledger_svc, dash_svc, "ledger.*", "Kafka")
+Rel(ledger_svc, receipt_svc, "GetReceipt", "gRPC")
+Rel(ledger_svc, ledger_db, "Persists records and outbox", "SQL")
 
-Rel(dash_svc, ch_db, "Projects & queries read model", "SQL")
+Rel(dash_svc, ch_db, "Projects and queries read model", "SQL")
 Rel(dash_svc, ledger_svc, "Fallback: GetRecords", "gRPC")
+
+Rel_(receipt_svc, reader_svc, "receipt.uploaded", "Kafka", "..>")
+Rel_(reader_svc, receipt_svc, "receipt.extracted", "Kafka", "..>")
+Rel_(reader_svc, suggest_svc, "receipt.extracted", "Kafka", "..>")
+Rel_(suggest_svc, receipt_svc, "receipt.suggested", "Kafka", "..>")
+Rel_(ledger_svc, dash_svc, "ledger.*", "Kafka", "..>")
 @enduml
 
 @startuml C4_Component_Ledger_Service
