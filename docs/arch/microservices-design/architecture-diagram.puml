@@ -266,11 +266,11 @@ PostgresOutboxPublisher ..|> OutboxPublisher : implements
 @enduml
 
 @startuml Sequence_UC01
+skin rose
 title Sequence Diagram - UC-01: Ingest Expense from Bank Receipt
 
 actor Customer as U
 participant "Mobile App" as App
-participant "Traefik" as TR
 participant "Receipt SVC" as RC
 participant "Object Storage" as S3
 queue "Redpanda" as K
@@ -279,19 +279,22 @@ participant "Suggestion SVC" as SG
 participant "Ledger SVC" as LG
 participant "Dashboard SVC" as DS
 
+note over App, RC
+  Mobile → services via Traefik (REST + JWT)
+end note
+
 U -> App: Bank app saves receipt to gallery
 App -> App: Media-library watcher detects new image
-App -> TR: POST /receipts (multipart) [REST]
-TR -> RC: Forward (JWT validated via ForwardAuth)
-RC -> RC: sha256(image), reject if duplicate
-RC -> S3: PutObject (SSE-encrypted)
-RC -> RC: TX: INSERT receipt(status=uploaded) + outbox
-RC -->> App: 202 Accepted {receipt_id}
+App -> RC: Upload receipt image [REST]
+RC -> RC: Deduplicate by image hash
+RC -> S3: Store encrypted image
+note right of RC: Persist receipt\n(status=uploaded)\n+ enqueue event
+RC -->> App: Accepted {receipt_id}
 RC -> K: Publish receipt.uploaded
 
 K -> RD: Consume receipt.uploaded
-RD -> S3: GetObject
-RD -> RD: OCR / VLM extract fields
+RD -> S3: Fetch image
+RD -> RD: Extract fields (OCR / VLM)
 alt extraction succeeded
     RD -> K: Publish receipt.extracted
 else failed
@@ -300,64 +303,67 @@ end
 
 par Receipt persists facts
     K -> RC: Consume receipt.extracted
-    RC -> RC: UPDATE status=extracted
+    note right of RC: status → extracted
     RC -> App: Push "New expense detected"
 else Suggestion classifies
     K -> SG: Consume receipt.extracted
-    SG -> LG: GetCategories(user_id) [gRPC]
-    LG -->> SG: Return categories
+    SG -> LG: GetCategories [gRPC]
+    LG -->> SG: Categories
     SG -> SG: Match merchant to category
     SG -> K: Publish receipt.suggested
 end
 
 K -> RC: Consume receipt.suggested
-RC -> RC: UPDATE suggested_category_id, status=suggested
+note right of RC: status → suggested\n(with category)
 opt User has not confirmed yet
     RC -> App: Push "Suggested: Food - confirm?"
 end
 
 U -> App: Tap category (confirm or change)
-App -> TR: POST /records {receipt_id, category_id} [REST]
-TR -> LG: Forward
-LG -> RC: GetReceipt(receipt_id) [gRPC]
-RC -->> LG: Return receipt metadata
-LG -> LG: TX: INSERT record (UNIQUE receipt_id) + outbox
-LG -->> App: 201 Created
+App -> LG: Create expense from receipt [REST]
+LG -> RC: GetReceipt [gRPC]
+RC -->> LG: Receipt metadata
+note right of LG: Persist record\n+ enqueue event
+LG -->> App: Created
 LG -> K: Publish ledger.expense.created
 
 par Update receipt status
     K -> RC: Consume ledger.expense.created
-    RC -> RC: UPDATE status=confirmed
+    note right of RC: status → confirmed
 else Project read model
     K -> DS: Consume ledger.expense.created
-    DS -> DS: Project into ClickHouse read model
+    DS -> DS: Project into read model
 end
 @enduml
 
 @startuml Sequence_UC03
+skin rose
 title Sequence Diagram - UC-03: Review Dashboard
 
 actor Customer as U
 participant "Mobile App" as App
-participant "Traefik" as TR
 participant "Dashboard SVC" as DS
 database "ClickHouse" as CH
 participant "Ledger SVC" as LG
 
+note over App, DS
+  Mobile → services via Traefik (REST + JWT)
+end note
+
 U -> App: Open dashboard (type, range, bank filter)
-App -> TR: GET /dashboard/donut?... [REST]
-TR -> DS: Forward
-alt Read model available (normal path)
-    DS -> CH: SELECT from AggregatingMergeTree rollup
-    CH -->> DS: Return aggregated buckets
-else ClickHouse unavailable / Sprint 1 fallback
+App -> DS: Get dashboard chart [REST]
+alt Read model available
+    DS -> CH: Query pre-aggregated rollup
+    CH -->> DS: Aggregated buckets
+else ClickHouse unavailable / early fallback
     note over DS, LG
-      Graceful degradation path
+      Graceful degradation:
+      fetch raw records and aggregate in memory
     end note
-    DS -> LG: GetRecords(filter) [gRPC]
-    LG -->> DS: Return raw records
+    DS -> LG: GetRecords [gRPC]
+    LG -->> DS: Raw records
     DS -> DS: Aggregate in memory
 end
-DS -->> App: Return chart JSON [REST]
+DS -->> App: Chart data [REST]
 App -->> U: Render donut / bar charts
 @enduml

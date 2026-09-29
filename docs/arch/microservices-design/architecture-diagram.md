@@ -109,18 +109,20 @@ The main asynchronous receipt ingestion and category suggestion pipeline:
 
 ![Sequence Diagram - UC-01](./Sequence_UC01.png)
 
-- **Synchronous user acknowledgment**: The user receives a synchronous `201 Created` once Ledger persists the financial record. Receipt state converges asynchronously via `ledger.expense.created`.
-- **Duplicate protection**: `UNIQUE (receipt_id)` on the ledger table guarantees that double-tapping a confirmation notification is a no-op.
+- **Synchronous user acknowledgment**: The user gets a synchronous success once Ledger persists the financial record. Receipt state converges asynchronously via `ledger.expense.created`.
+- **Duplicate protection**: Image-hash dedupe at upload; `UNIQUE (receipt_id)` on the ledger table makes double-tap confirmation a no-op.
+- **Reliability**: Receipt and Ledger writes use the transactional outbox so DB commit and event publish stay atomic.
 
 ---
 
 ## Sequence — UC-03: Dashboard
 
-Dashboard query path with ClickHouse AggregatingMergeTree and gRPC degradation fallback:
+Dashboard query path with a ClickHouse read model and gRPC degradation fallback:
 
 ![Sequence Diagram - UC-03](./Sequence_UC03.png)
 
-- **Graceful degradation**: If ClickHouse is unavailable or during early Sprint 1 before the OLAP read model is initialized, Dashboard SVC falls back to `GetRecords` gRPC calls to Ledger SVC and aggregates in memory.
+- **Graceful degradation**: If ClickHouse is unavailable or before the OLAP read model is ready, Dashboard SVC falls back to `GetRecords` gRPC on Ledger SVC and aggregates in memory.
+- **Rollups**: ClickHouse `AggregatingMergeTree` (see Data ownership).
 
 ---
 
