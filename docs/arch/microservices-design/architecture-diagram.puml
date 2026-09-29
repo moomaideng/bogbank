@@ -1,5 +1,6 @@
 @startuml C4_Context_BogBank
 !include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
 
 title System Context Diagram for BogBank (L1)
 
@@ -9,7 +10,6 @@ System(bogbank, "BogBank System", "Automated receipt ingestion, manual ledger, a
 System_Ext(google_auth, "Google OAuth 2.0", "Identity provider for authentication via PKCE.")
 System_Ext(vlm_api, "Receipt OCR / VLM API", "Extracts transaction metadata from receipts (Gemini Flash / Typhoon OCR).")
 System_Ext(expo_push, "Expo Push Service", "Delivers push notifications for suggested expense confirmation.")
-System_Ext(object_storage, "S3-Compatible Storage", "Stores encrypted receipt images (RustFS in dev, S3 in prod).")
 
 Rel(customer, bogbank, "Manages hooks, records, confirms receipts, views dashboard", "REST")
 Rel(customer, google_auth, "Signs in with OAuth 2.0 + PKCE", "HTTPS")
@@ -17,11 +17,11 @@ Rel(bogbank, google_auth, "Verifies ID tokens", "HTTPS")
 Rel(bogbank, vlm_api, "Extracts receipt fields", "HTTPS")
 Rel(bogbank, expo_push, "Sends push notifications", "HTTPS")
 Rel(expo_push, customer, "Delivers push notification to phone", "Push Notification")
-Rel(bogbank, object_storage, "Stores and retrieves receipt images", "S3 API")
 @enduml
 
 @startuml C4_Container_BogBank
 !include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
 
 title Container Diagram for BogBank System (L2)
 
@@ -48,8 +48,6 @@ System_Boundary(bogbank_system, "BogBank System") {
     ContainerDb(ch_db, "Read Model Store", "ClickHouse", "Stores records_mv and AggregatingMergeTree rollups.")
     ContainerDb(redis_db, "Cache & State Store", "Redis", "Consumer idempotency keys, category cache, and sessions.")
     ContainerDb(blob_store, "Object Storage", "S3 / RustFS", "Stores SSE-encrypted receipt images.")
-
-    Container(redpanda, "Message Broker", "Redpanda (Kafka API)", "Asynchronous event choreography and transactional outbox relay.")
 }
 
 Rel(customer, mobile_app, "Interacts with", "UI")
@@ -67,92 +65,92 @@ Rel(auth_svc, auth_db, "Reads/writes users & tokens", "SQL")
 Rel(auth_svc, redis_db, "Caches session tokens", "Redis")
 
 Rel(receipt_svc, receipt_db, "Persists receipts & outbox", "SQL")
-Rel(receipt_svc, blob_store, "Puts receipt images", "S3 API")
+Rel(receipt_svc, blob_store, "Stores receipt images", "S3 API")
 Rel(receipt_svc, expo_push, "Triggers push notifications", "HTTPS")
-Rel(receipt_svc, redpanda, "Publishes receipt.uploaded via outbox", "Kafka")
 
-Rel(redpanda, reader_svc, "Consumes receipt.uploaded", "Kafka")
-Rel(reader_svc, blob_store, "Gets receipt image", "S3 API")
+Rel(receipt_svc, reader_svc, "receipt.uploaded", "Kafka")
+Rel(reader_svc, blob_store, "Fetches receipt image", "S3 API")
 Rel(reader_svc, vlm_api, "Extracts fields via VLM", "HTTPS")
-Rel(reader_svc, redpanda, "Publishes receipt.extracted", "Kafka")
+Rel(reader_svc, receipt_svc, "receipt.extracted", "Kafka")
+Rel(reader_svc, suggest_svc, "receipt.extracted", "Kafka")
 
-Rel(redpanda, suggest_svc, "Consumes receipt.extracted", "Kafka")
 Rel(suggest_svc, ledger_svc, "Queries GetCategories", "gRPC")
 Rel(suggest_svc, redis_db, "Caches categories & dedupes", "Redis")
-Rel(suggest_svc, redpanda, "Publishes receipt.suggested", "Kafka")
-
-Rel(redpanda, receipt_svc, "Consumes receipt.extracted & receipt.suggested", "Kafka")
+Rel(suggest_svc, receipt_svc, "receipt.suggested", "Kafka")
 
 Rel(ledger_svc, receipt_svc, "Queries GetReceipt (verification)", "gRPC")
 Rel(ledger_svc, ledger_db, "Persists records & outbox", "SQL")
-Rel(ledger_svc, redpanda, "Publishes ledger.* events via outbox", "Kafka")
+Rel(ledger_svc, receipt_svc, "ledger.expense.created", "Kafka")
+Rel(ledger_svc, dash_svc, "ledger.*", "Kafka")
 
-Rel(redpanda, dash_svc, "Consumes ledger.* events", "Kafka")
 Rel(dash_svc, ch_db, "Projects & queries read model", "SQL")
 Rel(dash_svc, ledger_svc, "Fallback: GetRecords", "gRPC")
 @enduml
 
 @startuml C4_Component_Ledger_Service
 !include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
 
 title Component Diagram for Ledger Service (L3)
 
 Container(traefik, "Traefik API Gateway", "Traefik v3", "Routes incoming REST requests.")
 Container(dash_svc, "Dashboard SVC", "Go", "Synchronous gRPC client.")
-Container(redpanda, "Redpanda", "Kafka API", "Message broker for async events.")
 ContainerDb(ledger_db, "PostgreSQL", "ledger schema", "Stores records, categories, and outbox.")
+ContainerDb(redis_db, "Redis Cache", "Redis", "Consumer idempotency store.")
 Container(receipt_svc, "Receipt SVC", "Go", "gRPC server for receipt details.")
 
-Container_Boundary(ledger_service, "Ledger Service (Go) — Hexagonal Architecture") {
+Container_Boundary(ledger_service, "Ledger Service (Go) — Hexagonal Architecture (ADR-11)") {
     Component(http_handler, "HTTP Handler Adapter", "chi + Huma v2", "Exposes REST endpoints, validates inputs, generates OpenAPI 3.1.")
     Component(grpc_server, "gRPC Server Adapter", "gRPC", "Implements GetRecords and GetCategories RPC endpoints.")
-    Component(kafka_consumer, "Kafka Consumer Adapter", "Kafka Client", "Consumes receipt.suggested events with Redis deduplication.")
+    Component(kafka_consumer, "Kafka Consumer Adapter", "Kafka Client", "Consumes pipeline events with Redis deduplication.")
 
     Component(record_service, "Record Service", "Domain Service", "Enforces business invariants, duplicate checks, transaction rules.")
     Component(category_service, "Category Service", "Domain Service", "Manages system and custom user categories.")
 
     Component(pg_repo, "Postgres Repo Adapter", "Bun ORM", "Executes SQL transactions for records, categories, and outbox.")
     Component(receipt_client, "Receipt gRPC Client", "gRPC Client", "Calls Receipt SVC to verify receipt metadata before recording.")
-    Component(outbox_pub, "Outbox Publisher", "Outbox Relay", "Appends domain events to ledger.outbox table atomically.")
+    Component(outbox_pub, "Outbox Publisher", "Outbox Relay", "Saves the event in the outbox during the same database transaction. A relay publishes those rows to Redpanda.")
 }
 
 Rel(traefik, http_handler, "Routes /records, /categories", "REST")
 Rel(dash_svc, grpc_server, "Calls GetRecords", "gRPC")
-Rel(redpanda, kafka_consumer, "Delivers receipt.suggested", "Kafka")
 
-Rel(http_handler, record_service, "Calls RecordUseCase")
-Rel(http_handler, category_service, "Calls CategoryUseCase")
-Rel(grpc_server, record_service, "Calls RecordQueryUseCase")
-Rel(grpc_server, category_service, "Calls CategoryUseCase")
-Rel(kafka_consumer, record_service, "Calls RecordUseCase")
+Rel(http_handler, record_service, "Creates and updates records")
+Rel(http_handler, category_service, "Manages categories")
+Rel(grpc_server, record_service, "Queries records")
+Rel(grpc_server, category_service, "Lists categories")
+Rel(kafka_consumer, record_service, "Auto-creates expense records")
+Rel(kafka_consumer, redis_db, "Dedupes on event_id", "Redis")
 
-Rel(record_service, pg_repo, "Persists record via RecordRepository")
-Rel(record_service, receipt_client, "Fetches receipt via ReceiptClient")
-Rel(record_service, outbox_pub, "Saves events via OutboxPublisher")
-Rel(category_service, pg_repo, "Persists category via CategoryRepository")
+Rel(record_service, pg_repo, "Persists records")
+Rel(record_service, receipt_client, "Fetches receipt details")
+Rel(record_service, outbox_pub, "Saves domain events")
+Rel(category_service, pg_repo, "Persists categories")
 
 Rel(pg_repo, ledger_db, "Executes SQL", "SQL")
 Rel(outbox_pub, ledger_db, "Inserts into outbox", "SQL")
 Rel(receipt_client, receipt_svc, "Queries GetReceipt", "gRPC")
-Rel(outbox_pub, redpanda, "Outbox relay publishes ledger.*", "Kafka")
+Rel(outbox_pub, receipt_svc, "Publishes ledger.expense.created", "Kafka")
+Rel(outbox_pub, dash_svc, "Publishes ledger.*", "Kafka")
 @enduml
 
 @startuml C4_Component_Receipt_Service
 !include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
 
 title Component Diagram for Receipt Service (L3)
 
 Container(traefik, "Traefik API Gateway", "Traefik v3", "Routes incoming multipart uploads & hook calls.")
 Container(ledger_svc, "Ledger SVC", "Go", "Calls GetReceipt during expense confirmation.")
-Container(redpanda, "Redpanda", "Kafka API", "Message broker for async event pipeline.")
+Container(reader_svc, "Receipt Reader SVC", "Go", "Stateless OCR worker.")
 ContainerDb(receipt_db, "PostgreSQL", "receipt schema", "Stores bank hooks, receipts, events, outbox.")
 ContainerDb(blob_store, "Object Storage", "S3 / RustFS", "Stores receipt image files.")
 System_Ext(expo_push, "Expo Push Service", "Dispatches mobile push notifications.")
 
-Container_Boundary(receipt_service, "Receipt Service (Go) — Hexagonal Architecture") {
+Container_Boundary(receipt_service, "Receipt Service (Go) — Hexagonal Architecture (ADR-11)") {
     Component(http_handler, "HTTP Handler Adapter", "chi + Huma v2", "Exposes POST /receipts and bank hook endpoints.")
     Component(grpc_server, "gRPC Server Adapter", "gRPC", "Implements GetReceipt RPC for Ledger SVC.")
-    Component(kafka_consumer, "Kafka Consumer Adapter", "Kafka Client", "Consumes receipt.extracted, receipt.suggested, ledger.expense.created.")
+    Component(kafka_consumer, "Kafka Consumer Adapter", "Kafka Client", "Consumes extraction and suggestion events.")
 
     Component(receipt_service_core, "Receipt Service", "Domain Service", "Manages state machine and SHA-256 dedupe check.")
     Component(hook_service_core, "Bank Hook Service", "Domain Service", "Validates bank providers and permissions.")
@@ -160,54 +158,45 @@ Container_Boundary(receipt_service, "Receipt Service (Go) — Hexagonal Architec
     Component(bun_repo, "Postgres Repo Adapter", "Bun ORM", "Persists receipts, bank hooks, audit events, and outbox.")
     Component(s3_adapter, "S3 Storage Adapter", "S3 SDK", "Uploads and retrieves raw receipt images.")
     Component(push_adapter, "Push Adapter", "Expo Push Client", "Dispatches notifications when suggested category is ready.")
-    Component(outbox_pub, "Outbox Publisher", "Outbox Relay", "Appends receipt.uploaded to outbox table atomically.")
+    Component(outbox_pub, "Outbox Publisher", "Outbox Relay", "Saves the event in the outbox during the same database transaction. A relay publishes those rows to Redpanda.")
 }
 
 Rel(traefik, http_handler, "Routes /receipts/*, /bank-hooks/*", "REST")
 Rel(ledger_svc, grpc_server, "Calls GetReceipt", "gRPC")
-Rel(redpanda, kafka_consumer, "Delivers pipeline events", "Kafka")
 
-Rel(http_handler, receipt_service_core, "Calls ReceiptUploadUseCase")
-Rel(http_handler, hook_service_core, "Calls BankHookUseCase")
-Rel(grpc_server, receipt_service_core, "Calls ReceiptLifecycleUseCase")
-Rel(kafka_consumer, receipt_service_core, "Calls ReceiptLifecycleUseCase")
+Rel(http_handler, receipt_service_core, "Uploads receipt & checks dedupe")
+Rel(http_handler, hook_service_core, "Configures bank hooks")
+Rel(grpc_server, receipt_service_core, "Provides receipt details")
+Rel(kafka_consumer, receipt_service_core, "Updates lifecycle state")
 
-Rel(receipt_service_core, bun_repo, "Persists receipt via ReceiptRepository")
-Rel(receipt_service_core, s3_adapter, "Puts image via ObjectStorageClient")
-Rel(receipt_service_core, push_adapter, "Dispatches via NotificationClient")
-Rel(receipt_service_core, outbox_pub, "Saves events via OutboxPublisher")
-Rel(hook_service_core, bun_repo, "Persists hook via BankHookRepository")
+Rel(receipt_service_core, bun_repo, "Persists receipts & events")
+Rel(receipt_service_core, s3_adapter, "Stores encrypted image")
+Rel(receipt_service_core, push_adapter, "Sends push notification")
+Rel(receipt_service_core, outbox_pub, "Saves domain events")
+Rel(hook_service_core, bun_repo, "Persists bank hooks")
 
 Rel(bun_repo, receipt_db, "Executes SQL", "SQL")
 Rel(outbox_pub, receipt_db, "Inserts into outbox", "SQL")
 Rel(s3_adapter, blob_store, "Uploads image", "S3 API")
 Rel(push_adapter, expo_push, "Sends push", "HTTPS")
-Rel(outbox_pub, redpanda, "Outbox relay publishes receipt.uploaded", "Kafka")
+Rel(outbox_pub, reader_svc, "Publishes receipt.uploaded", "Kafka")
 @enduml
 
 @startuml C4_Code_Ledger_Service
-title Code Diagram (L4) - Ledger Service Hexagonal Architecture
+title Code Diagram (L4) - Ledger Service, ADR-11 (3-tier: handler -> usecase -> adapter)
 
 skinparam classAttributeIconSize 0
 
 package "Adapters::Inbound::HTTP" {
     class RecordHandler {
-        -recordUC: RecordUseCase
+        -recordSvc: RecordService
         +PostExpense(ctx: context.Context, input: PostExpenseInput): (PostExpenseOutput, error)
         +PostIncome(ctx: context.Context, input: PostIncomeInput): (PostIncomeOutput, error)
         +RegisterRoutes(api: huma.API): void
     }
 }
 
-package "Core::Ports::Inbound" {
-    interface RecordUseCase {
-        +CreateExpenseFromReceipt(ctx: context.Context, cmd: CreateExpenseCmd): (*Record, error)
-        +CreateManualExpense(ctx: context.Context, cmd: CreateManualExpenseCmd): (*Record, error)
-        +GetRecords(ctx: context.Context, filter: RecordFilter): ([]Record, error)
-    }
-}
-
-package "Core::Domain::Services" {
+package "usecase" {
     class RecordService {
         -repo: RecordRepository
         -receiptClient: ReceiptClient
@@ -216,9 +205,7 @@ package "Core::Domain::Services" {
         +CreateManualExpense(ctx: context.Context, cmd: CreateManualExpenseCmd): (*Record, error)
         +GetRecords(ctx: context.Context, filter: RecordFilter): ([]Record, error)
     }
-}
 
-package "Core::Domain::Entities" {
     class Record {
         +ID: uuid.UUID
         +UserID: uuid.UUID
@@ -230,9 +217,7 @@ package "Core::Domain::Entities" {
         +OccurredAt: time.Time
         +Validate(): error
     }
-}
 
-package "Core::Ports::Outbound" {
     interface RecordRepository {
         +Save(ctx: context.Context, tx: DBTx, record: *Record): error
         +FindByID(ctx: context.Context, id: uuid.UUID): (*Record, error)
@@ -269,12 +254,11 @@ package "Adapters::Outbound::GRPC" {
     }
 }
 
-RecordHandler ..> RecordUseCase : calls
-RecordService ..|> RecordUseCase : implements
+RecordHandler ..> RecordService : calls
 RecordService --> RecordRepository : uses
 RecordService --> ReceiptClient : uses
 RecordService --> OutboxPublisher : uses
-RecordService ..> Record : instantiates
+RecordService ..> Record : constructs & validates
 
 PostgresRecordRepo ..|> RecordRepository : implements
 GRPCReceiptClient ..|> ReceiptClient : implements
