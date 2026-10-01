@@ -9,9 +9,12 @@ Backend and mobile client live in one repo, in separate top-level trees. No `go.
 - Inside a service: `handler` → `usecase` → `adapter/<technology>`. HTTP and gRPC edges split into `handler/rest` and `handler/grpc`.
 - The usecase owns outbound interfaces. Adapters implement them.
 - `backend/services/<name>/main.go` is the cobra entrypoint. `serve --config` loads YAML. Env prefix overrides nested keys (`TEMPLATE_HTTP_ADDRESS` → `http.address`).
-- `mobile/` is the Expo (React Native) client. See `mobile/README.md` once it exists.
 
 Coding style is [ADR-11](docs/arch/adr/11_backend-coding-style-v2.md), which supersedes [ADR-10](docs/arch/adr/10_backend-coding-style.md). HTTP is chi + Huma ([ADR-09](docs/arch/adr/09_backend-http-api-stack.md)).
+
+## Mobile
+
+`mobile/` is the Expo (React Native) client. See [mobile/README.md](mobile/README.md) for the route convention, slice ownership, and on-device setup. Route files under `src/app/` stay thin; a slice's real code (components, hooks, API calls) lives in `src/modules/<slice>/`. A slice never imports another slice's `modules/`.
 
 ## Comments
 

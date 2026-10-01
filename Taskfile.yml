@@ -41,3 +41,48 @@ tasks:
       - task: dev
         vars:
           SVC: ledger
+
+  mobile:install:
+    desc: Install mobile app dependencies
+    cmds:
+      - pnpm --dir mobile install
+
+  mobile:start:
+    desc: Start the Expo dev server (task mobile:start -- --localhost when only USB reaches the backend)
+    cmds:
+      - pnpm --dir mobile start {{.CLI_ARGS}}
+
+  mobile:android:
+    desc: Build and install the mobile dev client on an Android emulator or connected device
+    cmds:
+      - pnpm --dir mobile android
+
+  mobile:ios:
+    desc: Build and install the mobile dev client on an iOS Simulator or connected device (macOS only)
+    cmds:
+      - pnpm --dir mobile ios
+
+  mobile:prebuild:clean:
+    desc: Regenerate android/ after a native dependency or app.json change
+    cmds:
+      - pnpm --dir mobile exec expo prebuild --clean
+
+  mobile:format:
+    desc: Format the mobile app with Prettier
+    cmds:
+      - pnpm --dir mobile format
+
+  mobile:check:
+    desc: Run every mobile check (format:check, lint, typecheck, expo-doctor)
+    dir: mobile
+    cmds:
+      - pnpm format:check
+      - pnpm lint
+      - pnpm typecheck
+      - pnpm dlx expo-doctor
+
+  mobile:adb-reverse:
+    desc: Tunnel Metro (8081) and the ledger API (8080) over USB to a connected device
+    cmds:
+      - adb reverse tcp:8081 tcp:8081
+      - adb reverse tcp:8080 tcp:8080
