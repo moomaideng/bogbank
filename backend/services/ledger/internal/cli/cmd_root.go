@@ -1,9 +1,10 @@
 package cli
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/moomaideng/bogbank/backend/internal/migrator"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/migrations"
-	"github.com/spf13/cobra"
 )
 
 const (

@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
+
+	"github.com/spf13/cobra"
 
 	"github.com/moomaideng/bogbank/backend/internal/database"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/config"
-	"github.com/spf13/cobra"
 )
 
 func loadConfig(cmd *cobra.Command) (config.Config, error) {
@@ -30,5 +32,9 @@ func openDB(ctx context.Context, cmd *cobra.Command) (*sql.DB, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	return db.DB, func() { db.Close() }, nil
+	return db.DB, func() {
+		if err := db.Close(); err != nil {
+			slog.Error("close postgres", "err", err)
+		}
+	}, nil
 }

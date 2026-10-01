@@ -5,9 +5,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+
 	"github.com/moomaideng/bogbank/backend/internal/baserepo"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
-	"github.com/uptrace/bun"
 )
 
 type categoryModel struct {

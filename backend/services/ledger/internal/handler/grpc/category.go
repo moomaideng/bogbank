@@ -3,9 +3,10 @@ package grpc
 import (
 	"context"
 
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	ledgerv1 "github.com/moomaideng/bogbank/backend/services/ledger/internal/proto/ledger/v1"
 	"github.com/moomaideng/bogbank/backend/services/ledger/internal/usecase"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (s *Server) CreateCategory(ctx context.Context, req *ledgerv1.CreateCategoryRequest) (*ledgerv1.CreateCategoryResponse, error) {
