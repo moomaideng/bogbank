@@ -9,6 +9,7 @@ The product is a personal expense tracker for college students. v1 is small: aut
 The team has 5 people, which is small for many independently deployable services. Build, deploy, and observability work grow with each extra service.
 
 Options considered:
+
 - **Monolith**: one app to build, run, and deploy that is simpler for a 5-person semester project, but it does not meet the course's service-decomposition deliverable.
 - **Microservices**: one service per DDD subdomain, each with its own data, which meets the course requirements but adds extra deploy and communication work.
 
@@ -20,15 +21,17 @@ Keep the split coarse-grained. Do not create more services than needed. Pair thi
 
 ## Status
 
-Accepted
+Accepted. The v1 constraints of one REST style, one database technology, and no message broker are partially superseded by ADR-12, ADR-13, and ADR-14. The decision to use microservices remains.
 
 ## Consequences
 
 **Positive**
+
 - Meets the graded deliverable for service decomposition, service APIs, and collaboration diagrams.
 - Makes each service own its business capability and its data. That is good practice at any product size.
 
 **Negative**
+
 - Extra operational work: inter-service calls, per-service deploys, and data owned by different services. This is more than v1 of the product needs.
 - Local development is slower than a single monolith app.
 - Some of this complexity waits until service boundaries are set in the Microservice Design step. That includes reverse proxy, dev/prod environment, internal IPC style, message broker, and observability stack.

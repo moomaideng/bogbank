@@ -15,7 +15,7 @@ Use PostgreSQL as the database technology for every service's data store in this
 
 ## Status
 
-Accepted
+Superseded by ADR-12.
 
 ## Consequences
 
