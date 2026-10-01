@@ -1,0 +1,21 @@
+opencollection: 1.0.0
+
+info:
+  name: BogBank
+
+bundled: false
+
+config:
+  protobuf:
+    protoFiles:
+      - type: file
+        path: ../services/ledger/proto/ledger/v1/ledger.proto
+    importPaths:
+      - path: ../services/ledger/proto
+
+extensions:
+  bruno:
+    defaultEnvironment: local
+    ignore:
+      - node_modules
+      - .git

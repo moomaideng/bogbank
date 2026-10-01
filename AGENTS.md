@@ -4,9 +4,9 @@
 
 One module, `github.com/moomaideng/bogbank`. No `go.work`.
 
-- Repo-root `internal/` is shared: config, database, baserepo, httpserver, objectstorage.
+- Repo-root `internal/` is shared: config, database, migrator, baserepo, httpserver, objectstorage.
 - A service lives at `services/<name>/`. Its `internal/` is private to that service.
-- Inside a service: `handler` → `usecase` → `adapter/<technology>`.
+- Inside a service: `handler` → `usecase` → `adapter/<technology>`. HTTP and gRPC edges split into `handler/rest` and `handler/grpc`.
 - The usecase owns outbound interfaces. Adapters implement them.
 - `services/<name>/main.go` is the cobra entrypoint. `serve --config` loads YAML. Env prefix overrides nested keys (`TEMPLATE_HTTP_ADDRESS` → `http.address`).
 

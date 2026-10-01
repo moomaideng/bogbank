@@ -1,0 +1,29 @@
+info:
+  name: CreateCategory
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/users/:user_id/categories"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: user_id
+      value: "{{userId}}"
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "name": "groceries"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
