@@ -1,7 +1,7 @@
-# TODO: Demo Postgres for ledger. Not the BOG-16 infra profile.
 services:
   postgres:
     image: postgres:18
+    profiles: [infra]
     restart: unless-stopped
     environment:
       POSTGRES_USER: user
@@ -13,9 +13,54 @@ services:
       - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d ledger"]
-      interval: 5s
+      interval: 1s
       timeout: 5s
-      retries: 10
+      retries: 30
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    profiles: [infra]
+    restart: unless-stopped
+    command: ["/data"]
+    environment:
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: admin
+      RUSTFS_SECRET_KEY: admin1234
+      RUSTFS_OBS_LOGGER_LEVEL: info
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+  ledger:
+    profiles: [ledger]
+    build:
+      context: .
+      dockerfile: docker/go-dev.Dockerfile
+    environment:
+      SERVICE: ledger
+      LEDGER_DATABASE_DSN: postgres://user:password@postgres:5432/ledger?sslmode=disable
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    volumes:
+      - .:/app
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  rustfs_data:
+  go_mod_cache:
+  go_build_cache:

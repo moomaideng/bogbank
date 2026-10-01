@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+vars:
+  PROTO_IMAGE: bogbank-proto
+  # App Compose profiles. Extend when a new service lands in compose.yaml.
+  APP_PROFILES: ledger
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  proto:
+    desc: Regenerate gRPC stubs with the pinned protobuf toolchain
+    cmds:
+      - docker build -t {{.PROTO_IMAGE}} -f docker/proto-gen.Dockerfile .
+      - docker run --rm -v "{{.ROOT_DIR}}:/src" -w /src {{.PROTO_IMAGE}}
+
+  down:
+    desc: Stop the Compose stack
+    cmds:
+      - docker compose --profile infra --profile {{.APP_PROFILES}} down --remove-orphans
+
+  dev:
+    desc: Start infra + one service (task dev SVC=ledger)
+    requires:
+      vars: [SVC]
+    cmds:
+      - docker compose --profile infra --profile {{.SVC}} up --build
+
+  dev:full:
+    desc: Start infra + every app service defined in Compose
+    cmds:
+      - docker compose --profile infra --profile {{.APP_PROFILES}} up --build
+
+  dev:ledger:
+    cmds:
+      - task: dev
+        vars:
+          SVC: ledger

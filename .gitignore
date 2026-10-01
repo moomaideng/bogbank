@@ -1,0 +1,10 @@
+# Env files
+.env*
+!.env.example
+
+# Air (hot-reload)
+tmp/
+build-errors.log
+
+# Taskfile
+.task/
