@@ -17,7 +17,8 @@ ADRs are numbered in the order they are decided. They are never renumbered. They
 | [07](./07_object-storage.md) | Object Storage | Accepted |
 | [08](./08_backend-language.md) | Backend Language | Accepted |
 | [09](./09_backend-http-api-stack.md) | Backend HTTP & API Stack | Accepted |
-| [10](./10_backend-coding-style.md) | Backend Coding Style | Accepted |
+| [10](./10_backend-coding-style.md) | Backend Coding Style | Superseded by ADR-11 |
+| [11](./11_backend-coding-style-v2.md) | Backend Coding Style v2 | Accepted |
 
 ## Deferred (Tier B)
 

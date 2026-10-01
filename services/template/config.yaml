@@ -1,0 +1,10 @@
+http:
+  address: ":8080"
+database:
+  dsn: "postgres://user:password@localhost:5432/template?sslmode=disable"
+s3:
+  endpoint: "http://localhost:9000"
+  region: "auto"
+  bucket: "receipts"
+  access_key_id: "admin"
+  secret_access_key: "admin1234"

@@ -14,7 +14,7 @@ Use hexagonal architecture (ports and adapters) for each backend service. A doma
 
 ## Status
 
-Accepted
+Superseded by ADR-11
 
 ## Consequences
 
