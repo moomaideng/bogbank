@@ -2,12 +2,12 @@
 PR title: <type>(<area>): <what changed>
 
 type: feat, fix, chore, docs
-area: backend/<service>, backend, frontend, infra, docs
+area: backend/<service>, backend, mobile, infra, docs
 
 Examples:
 - feat(backend/ledger): add category CRUD
 - feat(infra): add the compose infra profile
-- feat(frontend): add the dashboard screen
+- feat(mobile): add the dashboard screen
 - docs: record the service layout
 -->
 

@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package ledger.v1;
+
+option go_package = "github.com/moomaideng/bogbank/backend/services/ledger/internal/proto/ledger/v1;ledgerv1";
+
+import "google/protobuf/timestamp.proto";
+
+// TODO: CreateCategory, UpdateCategory, and DeleteCategory exist so the course
+// demo can show gRPC CRUD. The call other services keep is GetCategories in the
+// service catalog; these writes are not that boundary.
+service LedgerService {
+  rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
+  rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse);
+  rpc ListCategories(ListCategoriesRequest) returns (ListCategoriesResponse);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
+  rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
+}
+
+message Category {
+  string id = 1;
+  string user_id = 2;
+  string name = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message CreateCategoryRequest {
+  string user_id = 1;
+  string name = 2;
+}
+
+message CreateCategoryResponse {
+  Category category = 1;
+}
+
+message GetCategoryRequest {
+  string user_id = 1;
+  string id = 2;
+}
+
+message GetCategoryResponse {
+  Category category = 1;
+}
+
+message ListCategoriesRequest {
+  string user_id = 1;
+}
+
+message ListCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message UpdateCategoryRequest {
+  string user_id = 1;
+  string id = 2;
+  string name = 3;
+}
+
+message UpdateCategoryResponse {
+  Category category = 1;
+}
+
+message DeleteCategoryRequest {
+  string user_id = 1;
+  string id = 2;
+}
+
+message DeleteCategoryResponse {}

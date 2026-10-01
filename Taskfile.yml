@@ -16,8 +16,8 @@ tasks:
   proto:
     desc: Regenerate gRPC stubs with the pinned protobuf toolchain
     cmds:
-      - docker build -t {{.PROTO_IMAGE}} -f docker/proto-gen.Dockerfile .
-      - docker run --rm -v "{{.ROOT_DIR}}:/src" -w /src {{.PROTO_IMAGE}}
+      - docker build -t {{.PROTO_IMAGE}} -f backend/docker/proto-gen.Dockerfile backend
+      - docker run --rm -v "{{.ROOT_DIR}}/backend:/src" -w /src {{.PROTO_IMAGE}}
 
   down:
     desc: Stop the Compose stack
