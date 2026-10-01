@@ -24,14 +24,12 @@ ADRs are numbered in the order they are decided. They are never renumbered. They
 | [14](./14_message-broker.md) | Message Broker | Accepted |
 | [15](./15_api-gateway.md) | API Gateway and Reverse Proxy | Accepted |
 | [16](./16_authentication-service-boundary.md) | Authentication Service Boundary and Session Management | Accepted |
-| [17](./17_runtime-environments-service-discovery.md) | Runtime Environments and Service Discovery | Accepted; production topology deferred |
-| [18](./18_observability-stack.md) | Observability and Telemetry Stack | Accepted; Tempo deferred |
+| [17](./17_runtime-environments-service-discovery.md) | Runtime Environments and Service Discovery | Accepted |
+| [18](./18_observability-stack.md) | Observability and Telemetry Stack | Accepted |
 | [19](./19_dashboard-read-model-cqrs.md) | Dashboard Read Model and CQRS | Accepted |
 
 ## Deferred Decisions
 
 The following choices are intentionally not accepted yet:
 
-- Production deployment topology, including whether to adopt single-node k3s (ADR-17).
 - Production S3-compatible object-storage provider (ADR-07).
-- Tempo and retained distributed traces (ADR-18).

@@ -4,7 +4,7 @@
 
 ADR-04 selected PostgreSQL for every service. The service boundaries are now defined, and they introduce three different data-access needs: transactional financial records, a rebuildable dashboard read model, and short-lived coordination data for asynchronous consumers.
 
-Ledger and receipt data need relational constraints and transactions. Dashboard queries repeatedly aggregate by user, category, date, and bank provider. Redpanda consumers also need a fast store for idempotency keys so at-least-once delivery does not apply the same event twice. The course additionally requires both an RDBMS and a NoSQL database.
+Ledger and receipt data need relational constraints and transactions. Dashboard queries repeatedly aggregate by user, category, date, and bank provider. Redpanda (ADR-13) consumers also need a fast store for idempotency keys so at-least-once delivery does not apply the same event twice. The course additionally requires both an RDBMS and a NoSQL database.
 
 Options considered:
 - **PostgreSQL only**: the simplest operational choice and sufficient for the expected data volume, but it does not provide the intended independent dashboard projection or a suitable shared idempotency store.

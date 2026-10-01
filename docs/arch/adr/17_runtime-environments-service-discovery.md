@@ -2,34 +2,37 @@
 
 ## Context
 
-BogBank has multiple services and supporting datastores, but the team has five members and one semester. Local development must support running one vertical slice without starting the whole system. The guaranteed demonstration environment must also be reproducible and must not depend on optional infrastructure work.
+BogBank has multiple services and supporting datastores, but the team has five members and one semester. Environments must be reproducible for CI and demonstration. Local work must still allow running one vertical slice without starting the whole system. The team must choose an orchestration model that fits that delivery constraint without unnecessary operational overhead.
 
-Options considered:
-- **Docker Compose for development and demonstration**: simple and reproducible on one machine, with built-in DNS, but not representative of a multi-node production platform.
-- **Kubernetes for every environment**: consistent orchestration and discovery, but adds substantial setup, manifests, and troubleshooting to the critical path.
-- **Compose as the baseline with k3s as an optional production exercise**: protects delivery while leaving a path to demonstrate Kubernetes deployment later.
+Options considered (orchestration platform):
+- **Docker Compose on a single host**: simple and familiar for laptops and CI, with embedded DNS between services, but no built-in replicated scheduling or rolling updates across nodes.
+- **Docker Swarm**: multi-node-capable orchestration using Compose-compatible stack definitions, overlay networking, and built-in service discovery, with less moving parts than Kubernetes.
+- **Kubernetes (including lightweight distributions such as k3s)**: industry-standard orchestration and discovery, but adds substantial cluster setup, manifests or operators, and troubleshooting to the critical path for a small team.
 
 ## Decision
 
-Use **Docker Compose** as the required development, CI integration, and end-to-end demonstration environment. Compose profiles group infrastructure and each vertical service slice. Makefile targets provide stable commands for starting one slice or the full system.
+Use **Docker Swarm** as the orchestration platform for the integrated BogBank stack in development integration, CI end-to-end runs, and demonstration. Service definitions live in **Compose-format stack files** deployed with `docker stack deploy` (single-node Swarm is sufficient for the course).
 
-Services discover each other by Compose service name through embedded DNS. Traefik discovers public routes from Docker labels. One development PostgreSQL container may host private per-service schemas as allowed by ADR-12.
+**Local vertical slices.** Developers may still use plain `docker compose` with profiles or Makefile targets to start infrastructure plus one service slice on a laptop when a full stack deploy is unnecessary. Those flows must not contradict the Swarm stack definitions used for the full system.
 
-A single-node **k3s** environment is a deferred stretch goal. It must not be required for CI or the guaranteed demonstration. If adopted, services use Kubernetes Service DNS and Traefik's Kubernetes provider. A later ADR must accept the production deployment topology before k3s becomes a committed environment.
+**Service discovery.** Services on the Swarm overlay network resolve each other by **service name** through Swarm's embedded DNS. Traefik is the public entry point and discovers routes from **Docker Swarm** service labels (ADR-15). One development PostgreSQL container may host private per-service schemas as allowed by ADR-12.
+
+Kubernetes is out of scope for the required demonstration path. A later ADR would be needed before adopting Kubernetes in place of Swarm.
 
 ## Status
 
-Accepted for the Compose baseline. Production topology and k3s remain deferred.
+Accepted.
 
 ## Consequences
 
 **Positive**
-- Every team member can run a predictable environment with standard container tooling.
-- Profiles reduce resource use and make vertical-slice development practical.
-- Built-in DNS satisfies service discovery without operating Eureka or Consul.
-- Optional Kubernetes work cannot prevent the required demo from shipping.
+- One orchestration model covers integration, CI, and demo without maintaining parallel Kubernetes manifests.
+- Swarm provides rolling updates, restarts, and overlay DNS closer to production than Compose-only on a single machine.
+- Stack files stay close to Compose, which lowers the learning curve relative to Kubernetes.
+- Built-in DNS avoids operating a separate registry such as Eureka or Consul.
 
 **Negative**
-- Compose does not demonstrate multi-node scheduling, autoscaling, or production high availability.
-- Environment parity is limited if k3s is adopted later.
-- Profiles and health dependencies require ongoing maintenance as services are added.
+- Swarm is less common in industry than Kubernetes; skills transfer is partial.
+- Compose profiles and `docker stack deploy` do not align one-to-one; slice workflows need separate compose overrides or documented commands.
+- Multi-node Swarm is optional for the course but adds host and networking setup if exercised.
+- Health dependencies and stack files require maintenance as services are added.
